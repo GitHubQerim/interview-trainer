@@ -1,6 +1,9 @@
 # Nie committen: enthält echte Namen / private Korrespondenz mit der Betreuung
 docs/private/
 
+# Internes Arbeitsdokument (Claude Code Kontext) - nicht Teil der Abgabe, KI-Nutzung wird stattdessen in der Praesentation offengelegt
+CLAUDE.md
+
 # Node / Vite / Vitest / Playwright
 node_modules/
 dist/
