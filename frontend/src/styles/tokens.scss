@@ -1,0 +1,33 @@
+// Design-Tokens, abgeleitet aus dem bestehenden Klickdummy (Naeherungswerte,
+// bei der ersten Komponente ggf. auf WCAG-Kontrast nachschaerfen).
+
+// Farben
+$color-bg: #f7f5f0;
+$color-surface: #ffffff;
+$color-border: #e5e1d8;
+$color-text: #1f1f1f;
+$color-text-muted: #6f6f6a;
+$color-accent: #2f6b57;
+$color-accent-bg: #dcece3;
+$color-warn: #a9642a;
+$color-video-bg: #14120f;
+
+// Radien
+$radius-sm: 8px;
+$radius-md: 12px;
+$radius-pill: 999px;
+
+// Abstaende
+$space-1: 4px;
+$space-2: 8px;
+$space-3: 12px;
+$space-4: 16px;
+$space-6: 24px;
+$space-8: 32px;
+
+// Typografie
+$font-family-base: system-ui, 'Segoe UI', Roboto, sans-serif;
+$font-size-base: 16px;
+$font-size-sm: 14px;
+$font-size-lg: 20px;
+$font-size-xl: 28px;
