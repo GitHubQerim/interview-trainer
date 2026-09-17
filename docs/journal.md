@@ -37,3 +37,11 @@ Kriterium: [prozess|kritische-reflexion]
   | 33 ms | 22,0 fps (statt der angefragten ~30 fps) | 25,0 ms |
 - Einordnung: Die reine Modell-Inferenz kostet stabil ~25 ms/Frame (rechnerisch bis zu ~40 fps möglich). Bei 33 ms Throttle (~30 fps angefragt) kommen aber nur 22 fps an – der Flaschenhals liegt nicht in der Erkennung selbst, sondern in Bildaufnahme/Message-Passing drumherum. Für die spätere Scoring-Kernlogik reichen 8–16 fps völlig aus (Interviewantworten sind keine schnellen Bewegungen), es besteht kein Grund, Richtung 30 fps zu optimieren.
 - Anforderung: validiert das größte technische Risiko aus ADR-0003 früh (Slice-1-Ziel erreicht); liefert Rohmaterial für die kritische Evaluation (zwei echte Probleme + Lösung statt nur "hat funktioniert").
+
+## 2026-09-17 – Slice 2: Fragenkatalog-Endpoint aus Slice 6 vorgezogen
+Tags: [entscheidung]
+Kriterium: [prozess]
+- Was: Der Fragenkatalog liegt von Anfang an im Backend (minimaler Fastify-Server, `GET /api/fragen?beruf=&schwierigkeit=`) statt als lokales Frontend-Datenmodul. Das Frontend holt die Fragen per `fetch` über einen Vite-Dev-Proxy. Der Fastify-Server existiert damit schon seit Slice 2, nicht erst seit Slice 6 – ADR-0003-Backlogtext für Slice 2/6 entsprechend präzisiert.
+- Warum: Der Fragenkatalog gehört fachlich ins Backend (Formale Anforderung "Backend in Gesamtarchitektur", `docs/kontext.md`). Ihn zunächst im Frontend zu bauen und in Slice 6 ins Backend zu verschieben, hätte doppelte Arbeit bedeutet. Keine eigene ADR dafür – das ist eine Planungsänderung (Reihenfolge), keine Architekturentscheidung mit abgewogenen Alternativen.
+- Wie: CI bekam einen zweiten Job für `backend/` (Lint/Typecheck/Test/Build), damit Tests ab sofort für beide Pakete gelten, nicht nur fürs Frontend.
+- Anforderung: vermeidet doppelte Arbeit, stärkt "Backend dokumentiert und getestet" schon ab Slice 2 statt erst ab Slice 6.
