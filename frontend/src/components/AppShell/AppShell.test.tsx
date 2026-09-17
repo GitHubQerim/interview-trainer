@@ -15,15 +15,15 @@ describe('AppShell', () => {
     expect(screen.getByRole('heading', { name: 'Neue Übungssession' })).toBeInTheDocument()
   })
 
-  it('zeigt Platzhaltertext fuer die anderen Tabs', () => {
+  it('zeigt eine leere Seite fuer die anderen Tabs', () => {
     render(<AppShell />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Auswertung' }))
 
-    expect(screen.getByText('Die Auswertungsseite kommt in Slice 5.')).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Neue Übungssession' })).not.toBeInTheDocument()
   })
 
-  it('wechselt nach "Interview starten" zum Interview-Tab', async () => {
+  it('wechselt nach "Interview starten" auf den (noch leeren) Interview-Tab', async () => {
     render(<AppShell />)
 
     await waitFor(() => {
@@ -31,6 +31,6 @@ describe('AppShell', () => {
     })
     fireEvent.click(screen.getByRole('button', { name: 'Interview starten' }))
 
-    expect(screen.getByText('Der Interview-Flow kommt in Slice 3.')).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Neue Übungssession' })).not.toBeInTheDocument()
   })
 })
