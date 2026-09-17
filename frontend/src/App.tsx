@@ -1,14 +1,7 @@
-import { AnalysisSpike } from './components/AnalysisSpike/AnalysisSpike'
+import { AppShell } from './components/AppShell/AppShell'
 
-// Wegwerf-Verkabelung fuer den MediaPipe-Spike (Slice 1) - wird in Slice 2/3
-// durch die echten Setup-/Interview-Screens ersetzt.
 function App() {
-  return (
-    <main>
-      <h1>Interview-Trainer</h1>
-      <AnalysisSpike />
-    </main>
-  )
+  return <AppShell />
 }
 
 export default App

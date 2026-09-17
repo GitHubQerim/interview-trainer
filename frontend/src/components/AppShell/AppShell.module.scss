@@ -1,0 +1,42 @@
+@use '../../styles/tokens' as *;
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $space-4 $space-6;
+  border-bottom: 1px solid $color-border;
+}
+
+.title {
+  margin: 0;
+  font-size: $font-size-lg;
+  color: $color-text;
+}
+
+.nav {
+  display: flex;
+  gap: $space-2;
+}
+
+.tab {
+  padding: $space-2 $space-4;
+  border: none;
+  border-radius: $radius-pill;
+  background: transparent;
+  color: $color-text-muted;
+  cursor: pointer;
+}
+
+.tabActive {
+  background: $color-accent-bg;
+  color: $color-accent;
+}
+
+.content {
+  padding: $space-6;
+}
+
+.placeholder {
+  color: $color-text-muted;
+}
