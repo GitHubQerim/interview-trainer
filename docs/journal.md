@@ -21,3 +21,19 @@ Kriterium: [prozess|reflexion]
 - Was: ADR-0003 von `proposed` auf `accepted` gesetzt und von starren 1-Wochen-Sprints auf kurze, feature-slice-basierte Iterationen (2–3 Tage) umgestellt; Zielabgabe 30.09.2026 mit Ausweich auf die erste Oktoberwoche festgehalten, Slice-Backlog mit 8 Slices grob geschätzt.
 - Warum: In einem Solo-Team entfällt der Hauptgrund für eine feste Kalenderbox (Team-Synchronisation) – eine Box, die mit einem fertigen Feature-Slice endet statt mit einem Wochentag, liefert genauso regelmäßig Reflexionsstoff, ohne Leerlauf-Zeremonien an Tagen ohne echten Meilenstein. Zusätzlich zeigte die grobe Zeitrechnung (~13–20 Tage verfügbar), dass der Gesamtscope eng wird – bewusst früh dokumentiert statt es am Ende zu entdecken.
 - Anforderung: deckt "Vorgehensmodell gewählt und begründet"; die frühe, ehrliche Zeitabschätzung ist Rohmaterial für die kritische Evaluation am Ende (Zielerreichung/Verbesserungspotenzial).
+
+## 2026-09-17 – Slice 1 (MediaPipe/Web-Worker-Spike): Ergebnis
+Tags: [befund]
+Kriterium: [prozess|kritische-reflexion]
+- Was: FaceLandmarker + PoseLandmarker in einem Web Worker technisch verifiziert (Kamera-Zugriff, Worker-Init, Live-Erkennung, GPU-Delegate). Lief ohne Fehler.
+- Zwei echte Probleme aufgetreten und gelöst, beide bekannte Tooling-Eigenheiten, kein MediaPipe-Bug:
+  1. `ModuleFactory not set.` – `@mediapipe/tasks-vision` lädt seine WASM-Glue per `importScripts()`, das geht nur im klassischen Worker, nicht im Module-Worker. Fix: `new Worker(...)` ohne `{ type: 'module' }`.
+  2. `Cannot use import statement outside a module` im Dev-Server – bekannter Vite-Bug (vitejs/vite#8470, #7019): Vite injiziert im Dev-Modus selbst einen Import ins Env-Shim eines klassischen Workers, den der Browser ablehnt. Der Production-Build ist nicht betroffen. Workaround: für dieses Feature gegen `npm run build && npm run preview` statt `npm run dev` testen.
+- Messwerte (Face+Pose sequenziell, GPU-Delegate, PoseLandmarker "lite"):
+  | Throttle | Verarbeitungsrate | Dauer/Frame |
+  |---|---|---|
+  | 120 ms | 8,0 fps | 25–35 ms |
+  | 60 ms | 16,0 fps | 25,6 ms |
+  | 33 ms | 22,0 fps (statt der angefragten ~30 fps) | 25,0 ms |
+- Einordnung: Die reine Modell-Inferenz kostet stabil ~25 ms/Frame (rechnerisch bis zu ~40 fps möglich). Bei 33 ms Throttle (~30 fps angefragt) kommen aber nur 22 fps an – der Flaschenhals liegt nicht in der Erkennung selbst, sondern in Bildaufnahme/Message-Passing drumherum. Für die spätere Scoring-Kernlogik reichen 8–16 fps völlig aus (Interviewantworten sind keine schnellen Bewegungen), es besteht kein Grund, Richtung 30 fps zu optimieren.
+- Anforderung: validiert das größte technische Risiko aus ADR-0003 früh (Slice-1-Ziel erreicht); liefert Rohmaterial für die kritische Evaluation (zwei echte Probleme + Lösung statt nur "hat funktioniert").
