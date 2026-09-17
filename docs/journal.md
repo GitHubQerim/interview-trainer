@@ -14,3 +14,10 @@ Kriterium: [prozess]
 - Warum: Die Aufgabenstellung fordert, dass Tests integraler Bestandteil aller Entwicklungsphasen sind – nicht nur nachträglich ergänzt. Ein grüner CI-Lauf ab dem ersten Push (Zeitstempel) ist der objektive Beleg dafür, statt einer nachträglichen Behauptung im Bericht.
 - Wie: `.github/workflows/ci.yml` läuft bei jedem Push und führt Lint, Typecheck, Tests und Build aus. Lokal vor dem Commit einmal komplett grün durchlaufen lassen.
 - Anforderung: deckt "Kernfunktionalitäten durch Unit-/Integrationstests abgedeckt" und stärkt das Bewertungskriterium "Prozess".
+
+## 2026-09-17 – Vorgehensmodell von Wochen-Sprints auf slice-basierte Iterationen umgestellt
+Tags: [entscheidung]
+Kriterium: [prozess|reflexion]
+- Was: ADR-0003 von `proposed` auf `accepted` gesetzt und von starren 1-Wochen-Sprints auf kurze, feature-slice-basierte Iterationen (2–3 Tage) umgestellt; Zielabgabe 30.09.2026 mit Ausweich auf die erste Oktoberwoche festgehalten, Slice-Backlog mit 8 Slices grob geschätzt.
+- Warum: In einem Solo-Team entfällt der Hauptgrund für eine feste Kalenderbox (Team-Synchronisation) – eine Box, die mit einem fertigen Feature-Slice endet statt mit einem Wochentag, liefert genauso regelmäßig Reflexionsstoff, ohne Leerlauf-Zeremonien an Tagen ohne echten Meilenstein. Zusätzlich zeigte die grobe Zeitrechnung (~13–20 Tage verfügbar), dass der Gesamtscope eng wird – bewusst früh dokumentiert statt es am Ende zu entdecken.
+- Anforderung: deckt "Vorgehensmodell gewählt und begründet"; die frühe, ehrliche Zeitabschätzung ist Rohmaterial für die kritische Evaluation am Ende (Zielerreichung/Verbesserungspotenzial).
