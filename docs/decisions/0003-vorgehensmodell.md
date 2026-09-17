@@ -22,11 +22,11 @@ Wir wählen Option 4: angepasstes Scrum mit kurzen, slice-basierten Iterationen 
 Zielabgabe 30.09.2026, Ausweichtermin erste Oktoberwoche – ergibt ~13–20 Tage ab 17.09.2026. Für Solo-Entwicklung inkl. Backend, ML-Integration, Tests, Doku und Präsentation ist das eng; realistischer liegt das Ergebnis näher am Ausweichtermin als am 30.09.
 
 1. MediaPipe/Web-Worker-Spike (Kamera-Permission, Face/Pose-Landmarks im Worker, Nachrichtenprotokoll) – 2–3 Tage, Risiko zuerst
-2. Fragenkatalog + Setup-Screen (Beruf/Schwierigkeit/Modus) – 2 Tage
+2. Fragenkatalog (inkl. minimalem Fastify-Endpoint `GET /api/fragen`) + Setup-Screen (Beruf/Schwierigkeit/Modus) – 2 Tage
 3. Interview-Flow (Fragen-Sequenz, Timer, Live-Kamera + Worker-Anbindung) – 2–3 Tage
 4. Scoring-Kernlogik (`features.ts`/`score.ts`, regelbasiert, test-first) – 2 Tage
 5. Auswertungsseite (Metrik-Balken-Komponente mit Zielkorridor, Transkript-Highlighting) – 2 Tage
-6. Backend/Persistenz (Fastify+Prisma, anonymes Token, aggregierte Kennzahlen, Export/Löschen) – 2 Tage
+6. Backend-Ausbau (Prisma, anonymes Token, aggregierte Kennzahlen, Export/Löschen, Modelle/WASM selbst hosten statt CDN – siehe ADR-0004) – der Fastify-Server existiert schon seit Slice 2, wird hier erweitert, nicht neu aufgesetzt – 2 Tage
 7. Verlauf-Screen + Ende-zu-Ende-Integration – 1–2 Tage
 8. Schriftliches Konzept fertigstellen (Wireframes, Architektur-Diagramm, kritische Evaluation) + Präsentation – 3–4 Tage, teils parallel zu 6–7
 
