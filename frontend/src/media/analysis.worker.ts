@@ -1,4 +1,5 @@
 import { FaceLandmarker, FilesetResolver, PoseLandmarker } from '@mediapipe/tasks-vision'
+import type { FaceLandmarkerResult, PoseLandmarkerResult } from '@mediapipe/tasks-vision'
 import type { InboundMessage, OutboundMessage } from './protocol'
 
 const WASM_BASE_PATH = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/wasm'
@@ -40,11 +41,15 @@ function processFrame(image: ImageBitmap, timestamp: number): void {
   }
 
   const start = performance.now()
-  const faceResult = faceLandmarker.detectForVideo(image, timestamp)
-  const poseResult = poseLandmarker.detectForVideo(image, timestamp)
+  let faceResult: FaceLandmarkerResult
+  let poseResult: PoseLandmarkerResult
+  try {
+    faceResult = faceLandmarker.detectForVideo(image, timestamp)
+    poseResult = poseLandmarker.detectForVideo(image, timestamp)
+  } finally {
+    image.close()
+  }
   const durationMs = performance.now() - start
-
-  image.close()
 
   post({
     type: 'result',
