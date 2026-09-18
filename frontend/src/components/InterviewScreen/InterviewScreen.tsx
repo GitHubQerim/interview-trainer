@@ -3,8 +3,12 @@ import { getFragen, type Frage } from '../../domain/fragenkatalog'
 import type { FragenErgebnis } from '../../domain/interview'
 import type { SessionConfig } from '../../domain/session'
 import { formatZeit } from '../../domain/zeit'
-import { useAnalysisWorker } from '../../media/useAnalysisWorker'
+import { berechneAuswertung, type Auswertung } from '../../domain/score'
+import { useAnalysisWorker, type AnalysisResultPayload } from '../../media/useAnalysisWorker'
+import { DebugOverlay } from './DebugOverlay'
 import styles from './InterviewScreen.module.scss'
+
+const FRAMERATE_FENSTER_MS = 2_000
 
 const STANDARD_FRAGENDAUER_SEKUNDEN = 90
 
@@ -30,11 +34,26 @@ export function InterviewScreen({
   const ergebnisseRef = useRef<FragenErgebnis['ergebnisse']>([])
   const alleErgebnisseRef = useRef<FragenErgebnis[]>([])
 
+  // Debug-Overlay (Branch debug/live-overlay, vermutlich wieder entfernt).
+  const [debugModus, setDebugModus] = useState(false)
+  const [letztesErgebnis, setLetztesErgebnis] = useState<AnalysisResultPayload | null>(null)
+  const [liveAuswertung, setLiveAuswertung] = useState<Auswertung | null>(null)
+  const [framerate, setFramerate] = useState(0)
+  const resultZeitstempelRef = useRef<number[]>([])
+
   const { status, error, videoRef, start } = useAnalysisWorker((result) => {
     ergebnisseRef.current = [
       ...ergebnisseRef.current,
       { zeitstempel: result.timestamp, faceLandmarks: result.faceLandmarks, poseLandmarks: result.poseLandmarks },
     ]
+
+    setLetztesErgebnis(result)
+    setLiveAuswertung(berechneAuswertung(ergebnisseRef.current))
+
+    resultZeitstempelRef.current = [...resultZeitstempelRef.current, result.timestamp].filter(
+      (zeitstempel) => zeitstempel >= result.timestamp - FRAMERATE_FENSTER_MS,
+    )
+    setFramerate(resultZeitstempelRef.current.length / (FRAMERATE_FENSTER_MS / 1000))
   })
 
   useEffect(() => {
@@ -117,9 +136,24 @@ export function InterviewScreen({
         <p className={styles.frageText}>{aktuelleFrage.text}</p>
 
         {config.modus === 'video-ton' && (
-          <div className={styles.videoBox}>
+          <div className={styles.videoBox} style={{ position: 'relative' }}>
             <video ref={videoRef} className={styles.video} muted playsInline />
+            {debugModus && (
+              <DebugOverlay
+                videoElement={videoRef.current}
+                letztesErgebnis={letztesErgebnis}
+                liveAuswertung={liveAuswertung}
+                framerate={framerate}
+              />
+            )}
           </div>
+        )}
+
+        {config.modus === 'video-ton' && (
+          <label style={{ fontSize: 12, color: '#6f6f6a' }}>
+            <input type="checkbox" checked={debugModus} onChange={(event) => setDebugModus(event.target.checked)} />{' '}
+            Debug-Overlay anzeigen (nur zum Testen)
+          </label>
         )}
 
         <div className={styles.footer}>
