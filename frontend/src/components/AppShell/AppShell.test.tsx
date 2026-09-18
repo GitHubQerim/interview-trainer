@@ -23,7 +23,7 @@ describe('AppShell', () => {
     expect(screen.queryByRole('heading', { name: 'Neue Übungssession' })).not.toBeInTheDocument()
   })
 
-  it('wechselt nach "Interview starten" auf den (noch leeren) Interview-Tab', async () => {
+  it('zeigt nach "Interview starten" den Interview-Screen mit der gewaehlten Config', async () => {
     render(<AppShell />)
 
     await waitFor(() => {
@@ -32,5 +32,8 @@ describe('AppShell', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Interview starten' }))
 
     expect(screen.queryByRole('heading', { name: 'Neue Übungssession' })).not.toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Softwareentwicklung' })).toBeInTheDocument()
+    })
   })
 })

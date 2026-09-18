@@ -1,3 +1,5 @@
+import type { NormalizedLandmark } from '@mediapipe/tasks-vision'
+
 export type InboundMessage =
   | { type: 'init' }
   | { type: 'frame'; image: ImageBitmap; timestamp: number }
@@ -8,7 +10,7 @@ export type OutboundMessage =
       type: 'result'
       timestamp: number
       durationMs: number
-      faceLandmarkCount: number
-      poseLandmarkCount: number
+      faceLandmarks: NormalizedLandmark[]
+      poseLandmarks: NormalizedLandmark[]
     }
   | { type: 'error'; message: string }

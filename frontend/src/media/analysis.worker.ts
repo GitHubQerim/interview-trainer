@@ -55,8 +55,8 @@ function processFrame(image: ImageBitmap, timestamp: number): void {
     type: 'result',
     timestamp,
     durationMs,
-    faceLandmarkCount: faceResult.faceLandmarks[0]?.length ?? 0,
-    poseLandmarkCount: poseResult.landmarks[0]?.length ?? 0,
+    faceLandmarks: faceResult.faceLandmarks[0] ?? [],
+    poseLandmarks: poseResult.landmarks[0] ?? [],
   })
 }
 

@@ -1,5 +1,7 @@
+@use './styles/tokens' as *;
+
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -12,4 +14,7 @@
 
 body {
   margin: 0;
+  background: $color-bg;
+  color: $color-text;
+  font-family: $font-family-base;
 }

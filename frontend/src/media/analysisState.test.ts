@@ -1,11 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-  computeProcessingRate,
-  nextAnalysisStatus,
-  shouldSendFrame,
-  type AnalysisEvent,
-  type AnalysisStatus,
-} from './analysisState'
+import { nextAnalysisStatus, shouldSendFrame, type AnalysisEvent, type AnalysisStatus } from './analysisState'
 
 describe('nextAnalysisStatus', () => {
   const cases: Array<[AnalysisStatus, AnalysisEvent, AnalysisStatus]> = [
@@ -32,22 +26,5 @@ describe('shouldSendFrame', () => {
     [0, 32, 33, false],
   ])('lastSentAt=%d now=%d minIntervalMs=%d -> %s', (lastSentAt, now, minIntervalMs, expected) => {
     expect(shouldSendFrame(lastSentAt, now, minIntervalMs)).toBe(expected)
-  })
-})
-
-describe('computeProcessingRate', () => {
-  it('zaehlt nur Zeitstempel innerhalb des Rolling-Windows', () => {
-    const now = 10_000
-    const timestamps = [9_000, 9_500, 9_900, 8_000]
-
-    expect(computeProcessingRate(timestamps, 1_000, now)).toBe(3)
-  })
-
-  it('gibt 0 zurueck, wenn keine Zeitstempel im Fenster liegen', () => {
-    expect(computeProcessingRate([1_000], 1_000, 10_000)).toBe(0)
-  })
-
-  it('gibt 0 zurueck bei leerer Liste', () => {
-    expect(computeProcessingRate([], 1_000, 10_000)).toBe(0)
   })
 })

@@ -1,5 +1,7 @@
 import { useState } from 'react'
+import type { FragenErgebnis } from '../../domain/interview'
 import type { SessionConfig } from '../../domain/session'
+import { InterviewScreen } from '../InterviewScreen/InterviewScreen'
 import { SetupScreen } from '../SetupScreen/SetupScreen'
 import styles from './AppShell.module.scss'
 
@@ -14,11 +16,17 @@ const TABS: Array<{ value: Tab; label: string }> = [
 
 export function AppShell() {
   const [activeTab, setActiveTab] = useState<Tab>('setup')
-  const [, setSessionConfig] = useState<SessionConfig | null>(null)
+  const [sessionConfig, setSessionConfig] = useState<SessionConfig | null>(null)
+  const [, setErgebnisse] = useState<FragenErgebnis[] | null>(null)
 
   function handleStart(config: SessionConfig) {
     setSessionConfig(config)
     setActiveTab('interview')
+  }
+
+  function handleFinished(ergebnisse: FragenErgebnis[]) {
+    setErgebnisse(ergebnisse)
+    setActiveTab('auswertung')
   }
 
   return (
@@ -39,7 +47,12 @@ export function AppShell() {
         </nav>
       </header>
 
-      <main className={styles.content}>{activeTab === 'setup' && <SetupScreen onStart={handleStart} />}</main>
+      <main className={styles.content}>
+        {activeTab === 'setup' && <SetupScreen onStart={handleStart} />}
+        {activeTab === 'interview' && sessionConfig && (
+          <InterviewScreen config={sessionConfig} onFinished={handleFinished} />
+        )}
+      </main>
     </div>
   )
 }

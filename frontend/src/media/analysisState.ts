@@ -33,9 +33,3 @@ export function nextAnalysisStatus(current: AnalysisStatus, event: AnalysisEvent
 export function shouldSendFrame(lastSentAt: number, now: number, minIntervalMs: number): boolean {
   return now - lastSentAt >= minIntervalMs
 }
-
-export function computeProcessingRate(resultTimestamps: number[], windowMs: number, now: number): number {
-  const cutoff = now - windowMs
-  const count = resultTimestamps.filter((timestamp) => timestamp >= cutoff).length
-  return count / (windowMs / 1000)
-}
