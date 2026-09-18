@@ -8,8 +8,6 @@ const FACE_NASENSPITZE = 1
 // MediaPipe PoseLandmarker/BlazePose: Standard-Indizes des 33-Punkte-Skeletts.
 const POSE_LINKE_SCHULTER = 11
 const POSE_RECHTE_SCHULTER = 12
-const POSE_LINKE_HUEFTE = 23
-const POSE_RECHTE_HUEFTE = 24
 
 interface Punkt2D {
   x: number
@@ -58,28 +56,28 @@ export function schulterbreite(poseLandmarks: NormalizedLandmark[]): number | nu
   return Math.hypot(rechts.x - links.x, rechts.y - links.y)
 }
 
-function hueftMittelpunkt(poseLandmarks: NormalizedLandmark[]): Punkt2D | null {
-  const links = poseLandmarks[POSE_LINKE_HUEFTE]
-  const rechts = poseLandmarks[POSE_RECHTE_HUEFTE]
+/**
+ * Neigung der Schulterlinie zur Horizontalen, in Grad. 0 Grad = Schultern auf
+ * gleicher Hoehe (aufrecht), waechst mit seitlichem Lehnen.
+ *
+ * Nutzt bewusst nur die Schultern (11/12), keine Huefte: ein frueherer Versuch
+ * mit dem Winkel Huefte-Mitte->Schulter-Mitte hat echtes Lehnen in einem
+ * manuellen Test kaum abgebildet (30s durchgehend deutlich geneigt saß
+ * ergab nur 3,3 Grad) - vermutlich weil die Huefte bei typischer
+ * Webcam-Framing (Kopf/Schultern im Bild, Huefte meist nicht) von MediaPipe
+ * eher aus Koerper-Priors geschaetzt als tatsaechlich getrackt wird. Die
+ * Schulter-Neigung allein reagierte im selben Test deutlich staerker (6,7 Grad,
+ * korrekt "außerhalb" des Zielkorridors) - siehe ADR-0005-Nachtrag.
+ */
+export function haltungsWinkel(poseLandmarks: NormalizedLandmark[]): number | null {
+  const links = poseLandmarks[POSE_LINKE_SCHULTER]
+  const rechts = poseLandmarks[POSE_RECHTE_SCHULTER]
   if (!links || !rechts) {
     return null
   }
-  return { x: (links.x + rechts.x) / 2, y: (links.y + rechts.y) / 2 }
-}
 
-/**
- * Winkel zwischen der Huefte-Schulter-Linie und der Vertikalen, in Grad.
- * 0 Grad = Schultern genau ueber der Huefte (aufrecht).
- */
-export function haltungsWinkel(poseLandmarks: NormalizedLandmark[]): number | null {
-  const schulter = schulterMittelpunkt(poseLandmarks)
-  const huefte = hueftMittelpunkt(poseLandmarks)
-  if (!schulter || !huefte) {
-    return null
-  }
-
-  const dx = schulter.x - huefte.x
-  const dy = schulter.y - huefte.y
-  const radiant = Math.atan2(Math.abs(dx), Math.abs(dy))
+  const dx = rechts.x - links.x
+  const dy = rechts.y - links.y
+  const radiant = Math.atan2(Math.abs(dy), Math.abs(dx))
   return radiant * (180 / Math.PI)
 }

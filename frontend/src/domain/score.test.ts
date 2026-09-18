@@ -1,7 +1,7 @@
 import type { NormalizedLandmark } from '@mediapipe/tasks-vision'
 import { describe, expect, it } from 'vitest'
 import type { FrameErgebnis } from './interview'
-import { berechneAuswertung, istImZielkorridor } from './score'
+import { berechneAuswertung, haltungsVerlaufLabel, istImZielkorridor } from './score'
 
 function punkt(x: number, y: number): NormalizedLandmark {
   return { x, y, z: 0, visibility: 1 }
@@ -12,20 +12,16 @@ function aufrechteFace(): NormalizedLandmark[] {
 }
 
 function aufrechtePose(schulterX = 0.5, schulterbreite = 0.2): NormalizedLandmark[] {
-  const landmarks: NormalizedLandmark[] = new Array(25).fill(null).map(() => punkt(0, 0))
+  const landmarks: NormalizedLandmark[] = new Array(13).fill(null).map(() => punkt(0, 0))
   landmarks[11] = punkt(schulterX - schulterbreite / 2, 0.3)
   landmarks[12] = punkt(schulterX + schulterbreite / 2, 0.3)
-  landmarks[23] = punkt(schulterX - schulterbreite / 2, 0.6)
-  landmarks[24] = punkt(schulterX + schulterbreite / 2, 0.6)
   return landmarks
 }
 
-function gekipptePose(schulterVersatzX: number, schulterbreite = 0.2): NormalizedLandmark[] {
-  const landmarks: NormalizedLandmark[] = new Array(25).fill(null).map(() => punkt(0, 0))
-  landmarks[11] = punkt(0.4 + schulterVersatzX, 0.3)
-  landmarks[12] = punkt(0.4 + schulterVersatzX + schulterbreite, 0.3)
-  landmarks[23] = punkt(0.4, 0.6)
-  landmarks[24] = punkt(0.4 + schulterbreite, 0.6)
+function gekipptePose(schulterNeigungY: number, schulterbreite = 0.2): NormalizedLandmark[] {
+  const landmarks: NormalizedLandmark[] = new Array(13).fill(null).map(() => punkt(0, 0))
+  landmarks[11] = punkt(0.4, 0.3)
+  landmarks[12] = punkt(0.4 + schulterbreite, 0.3 + schulterNeigungY)
   return landmarks
 }
 
@@ -125,5 +121,24 @@ describe('istImZielkorridor', () => {
 
   it('Haltung 5 Grad liegt im Zielkorridor (0-6 Grad)', () => {
     expect(istImZielkorridor('haltung', 5)).toBe(true)
+  })
+})
+
+describe('haltungsVerlaufLabel', () => {
+  it('gibt "nimmt zu" bei deutlich positivem Verlauf zurueck', () => {
+    expect(haltungsVerlaufLabel(8)).toBe('nimmt zu')
+  })
+
+  it('gibt "nimmt ab" bei deutlich negativem Verlauf zurueck', () => {
+    expect(haltungsVerlaufLabel(-8)).toBe('nimmt ab')
+  })
+
+  it('gibt "bleibt stabil" bei einer Differenz unter 1 Grad zurueck', () => {
+    expect(haltungsVerlaufLabel(0.5)).toBe('bleibt stabil')
+    expect(haltungsVerlaufLabel(-0.5)).toBe('bleibt stabil')
+  })
+
+  it('gibt "keine Daten" zurueck, wenn kein Verlauf berechnet werden konnte', () => {
+    expect(haltungsVerlaufLabel(null)).toBe('keine Daten')
   })
 })
