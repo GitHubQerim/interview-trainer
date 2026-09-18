@@ -1,0 +1,80 @@
+@use '../../styles/tokens' as *;
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  padding: $space-4 0;
+  border-bottom: 1px solid $color-border;
+}
+
+.kopfzeile {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.label {
+  color: $color-text;
+}
+
+.wert {
+  font-size: $font-size-lg;
+}
+
+.wertImZielkorridor {
+  color: $color-accent;
+}
+
+.wertAusserhalb {
+  color: $color-warn;
+}
+
+.track {
+  position: relative;
+  height: 8px;
+  background: $color-border;
+  border-radius: $radius-pill;
+}
+
+.korridor {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: $color-accent-bg;
+  border-radius: $radius-pill;
+}
+
+.marker {
+  position: absolute;
+  top: 50%;
+  width: 4px;
+  height: 16px;
+  transform: translate(-50%, -50%);
+  border-radius: $radius-sm;
+  background: $color-text;
+}
+
+.markerImZielkorridor {
+  background: $color-accent;
+}
+
+.markerAusserhalb {
+  background: $color-warn;
+}
+
+.skala {
+  display: flex;
+  justify-content: space-between;
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+}
+
+.status {
+  font-size: $font-size-sm;
+}
+
+.details {
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+}

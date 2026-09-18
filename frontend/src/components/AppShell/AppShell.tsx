@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { FragenErgebnis } from '../../domain/interview'
 import type { SessionConfig } from '../../domain/session'
+import { AuswertungScreen } from '../AuswertungScreen/AuswertungScreen'
 import { InterviewScreen } from '../InterviewScreen/InterviewScreen'
 import { SetupScreen } from '../SetupScreen/SetupScreen'
 import styles from './AppShell.module.scss'
@@ -17,7 +18,7 @@ const TABS: Array<{ value: Tab; label: string }> = [
 export function AppShell() {
   const [activeTab, setActiveTab] = useState<Tab>('setup')
   const [sessionConfig, setSessionConfig] = useState<SessionConfig | null>(null)
-  const [, setErgebnisse] = useState<FragenErgebnis[] | null>(null)
+  const [ergebnisse, setErgebnisse] = useState<FragenErgebnis[] | null>(null)
 
   function handleStart(config: SessionConfig) {
     setSessionConfig(config)
@@ -51,6 +52,13 @@ export function AppShell() {
         {activeTab === 'setup' && <SetupScreen onStart={handleStart} />}
         {activeTab === 'interview' && sessionConfig && (
           <InterviewScreen config={sessionConfig} onFinished={handleFinished} />
+        )}
+        {activeTab === 'auswertung' && ergebnisse && (
+          <AuswertungScreen
+            ergebnisse={ergebnisse}
+            onNochmalUeben={() => setActiveTab('setup')}
+            onVerlaufAnsehen={() => setActiveTab('verlauf')}
+          />
         )}
       </main>
     </div>

@@ -15,15 +15,21 @@ export interface Auswertung {
 // Nutzertests zeigen eine andere sinnvolle Schwelle, oder eine Quelle mit konkreten
 // Werten fuer diese Zielgruppe wird gefunden.
 const KOPFAUSRICHTUNG_SCHWELLE = 0.7
-const KOPFAUSRICHTUNG_ZIELKORRIDOR = { min: 60, max: 80 }
+export const KOPFAUSRICHTUNG_ZIELKORRIDOR = { min: 60, max: 80 }
 
 // Herkunft: allgemeine Ratgeberliteratur zu Sitzhaltung in Gespraechen, nicht
 // empirisch validiert. Anlass zur Aenderung: siehe oben.
-const HALTUNG_ZIELKORRIDOR = { min: 0, max: 6 }
+export const HALTUNG_ZIELKORRIDOR = { min: 0, max: 6 }
 
 // Herkunft: aus dem Klickdummy uebernommener Beispielwert, nicht empirisch validiert.
 // Anlass zur Aenderung: siehe oben.
-const BEWEGUNGSRUHE_ZIELKORRIDOR = { min: 0.15, max: 0.45 }
+export const BEWEGUNGSRUHE_ZIELKORRIDOR = { min: 0.15, max: 0.45 }
+
+// Herkunft: eigene Einschaetzung, ab welcher Differenz ein Haltungs-Trend ueber die
+// Antwort hinweg als "Veraenderung" statt Mess-Rauschen gilt - nicht empirisch
+// validiert. Anlass zur Aenderung: echte Nutzertests zeigen, dass 1 Grad zu
+// empfindlich oder zu grob ist.
+const HALTUNG_VERLAUF_STABIL_SCHWELLE = 1
 
 // Herkunft: eigene Einschaetzung, ab wann eine Aufnahme zu lueckenhaft ist, um noch
 // verlaessliche Aussagen zuzulassen - nicht empirisch validiert. Anlass zur Aenderung:
@@ -165,6 +171,16 @@ export function berechneAuswertung(ergebnisse: FrameErgebnis[]): Auswertung {
     haltungVerlauf: berechneHaltungVerlauf(erkannteFrames),
     bewegungsruhe: berechneBewegungsruhe(erkannteFrames),
   }
+}
+
+export function haltungsVerlaufLabel(verlauf: number | null): string {
+  if (verlauf === null) {
+    return 'keine Daten'
+  }
+  if (Math.abs(verlauf) < HALTUNG_VERLAUF_STABIL_SCHWELLE) {
+    return 'bleibt stabil'
+  }
+  return verlauf > 0 ? 'nimmt zu' : 'nimmt ab'
 }
 
 export function istImZielkorridor(metrik: 'kopfausrichtung' | 'haltung' | 'bewegungsruhe', wert: number): boolean {

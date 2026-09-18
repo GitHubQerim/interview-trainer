@@ -36,4 +36,20 @@ describe('AppShell', () => {
       expect(screen.getByRole('heading', { name: 'Softwareentwicklung' })).toBeInTheDocument()
     })
   })
+
+  it('zeigt nach Abschluss des Interviews die Auswertung', async () => {
+    render(<AppShell />)
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Interview starten' })).toBeEnabled()
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Interview starten' }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Nächste Frage' })).toBeInTheDocument()
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Nächste Frage' }))
+
+    expect(screen.getByRole('heading', { name: 'Auswertung' })).toBeInTheDocument()
+  })
 })
