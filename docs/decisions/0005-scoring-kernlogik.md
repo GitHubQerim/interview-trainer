@@ -1,0 +1,28 @@
+# 0005 – Regelbasierte Scoring-Kernlogik
+Datum: 2026-09-18 | Status: accepted
+
+## Kontext
+Slice 4 sollte aus den in Slice 3 gepufferten Landmark-Koordinaten (`FrameErgebnis[]` pro Frage) die drei laut Konzept vorgesehenen Kennzahlen berechnen: Kopfausrichtung, Haltung, Bewegungsruhe – regelbasiert und test-first (ADR-0001). Dabei mussten mehrere Design-Entscheidungen mit echten Alternativen getroffen werden, keine reine Reihenfolge-/Planungsfrage (anders als Slice 2, siehe Journal 2026-09-17).
+
+## Entscheidungen
+
+**"Kopfausrichtung" statt "Blickkontakt".** Die Metrik misst über die horizontale Position der Nasenspitze relativ zur Bounding-Box aller Face-Landmarks, wie sehr der *Kopf* zur Kamera ausgerichtet ist – nicht die tatsächliche Blickrichtung der Augen. Echtes Blick-Tracking wäre über die Iris-Landmarks (Indizes 468–477, im aktuell konfigurierten Modell enthalten) möglich, ist aber eine Scope-Erweiterung und wird hier bewusst nicht gebaut. (Die Iris-Punkte sind nicht automatisch dabei – der FaceLandmarker liefert sie nur mit aktiviertem `refine_landmarks`; ohne das sind es 468 statt 478 Punkte. Der in Slice 1 gemessene Wert von 478 zeigt, dass diese Option in unserer Worker-Konfiguration mitläuft.) Der Name der Metrik wurde entsprechend korrigiert, um nicht mehr zu versprechen, als tatsächlich gemessen wird.
+
+**Median statt Durchschnitt für Haltung.** Der Neigungswinkel (Hüfte→Schulter-Linie zur Vertikalen) wird über den Median aggregiert, nicht den Durchschnitt – robuster gegen einzelne Ausreißer (z. B. kurzes Wegdrehen), die bei einem Durchschnitt den Gesamtwert stärker verzerren würden.
+
+**Zweiter Haltungswert "Verlauf".** Zusätzlich zum Median gibt es `haltungVerlauf` = Median-Winkel im letzten Zeit-Drittel der Antwort minus Median-Winkel im ersten Zeit-Drittel (Drittel nach Zeit, nicht nach Frame-Anzahl – konsistent mit der Zeitfenster-Vorgabe aus ADR-0004). Der Median beschreibt die grundsätzliche Sitzhaltung, der Verlauf, ob jemand im Laufe der Antwort einsackt – zwei unterschiedliche Aussagen, die ein einzelner Wert nicht abdecken könnte. Kein Zielkorridor für den Verlauf in diesem Slice; die Interpretation (z. B. "nimmt zu"/"bleibt gleich") ist Sache der Auswertungsseite (Slice 5).
+
+**Bewegungsruhe normiert auf Schulterbreite und auf Sekunden.** Rohe Pixel-/Koordinaten-Distanz zwischen aufeinanderfolgenden Frames hängt vom Abstand zur Kamera ab (näher an der Kamera = größere Distanzwerte bei gleicher realer Bewegung) und von der Framerate. Deshalb: Distanz des Schulter-Mittelpunkts wird durch die Schulterbreite im selben Frame geteilt (kameraabstands-unabhängig) und durch die tatsächliche Zeitdifferenz aus den Zeitstempeln (nicht durch die Frame-Anzahl – bindende Vorgabe aus ADR-0004).
+
+**Abdeckung als eigene Kennzahl, Mindestschwelle 60 %.** Ein Frame gilt als "erkannt", wenn sowohl Face- als auch Pose-Landmarks vorhanden sind. Nicht erkannte Frames fallen aus jeder Berechnung heraus, statt als schlechter Wert gezählt zu werden (ein fehlender Messwert ist kein "schlechter" Messwert). Liegt der Anteil erkannter Frames unter 60 %, werden alle drei Kennzahlen `null` statt eines auf lückenhaften Daten beruhenden Werts – die Auswertungsseite zeigt dann einen Hinweis auf zu lückenhafte Aufnahme statt eines potenziell irreführenden Scores.
+
+**Keine Mimik-/Lächel-/Emotionsmetriken.** Bewusste, dauerhafte Grenze, nicht nur für diesen Slice – nicht nur, weil solche Metriken fachlich heikel sind (Fehlinterpretation als Persönlichkeitsbewertung) und nicht Teil der freigegebenen Produktidee sind, sondern vor allem regulatorisch: der EU AI Act stuft Emotionserkennung am Arbeitsplatz und in Bildungseinrichtungen als verbotene bzw. hochriskante KI-Praxis ein. Ein Interview-Training bewegt sich fachlich genau an dieser Grenze (Bewerbungskontext). Die Entscheidung, hier keine Emotionserkennung zu bauen, steht damit auf einer regulatorischen Grundlage, nicht auf einer Geschmacksfrage – das ist auch die Abgrenzung, die in der kritischen Reflexion der Präsentation gezogen werden soll (Einordnung zum EU AI Act, siehe `docs/decisions/0002-datenschutz-architektur.md`).
+
+**Herkunfts-Transparenz für alle Schwellwerte.** Jede der vier Konstanten (Kopfausrichtungs-Schwelle 0,7; die drei Zielkorridore; Mindestabdeckung 60 %) trägt im Code einen Kommentar mit Herkunft und Änderungsanlass. Herkunft aktuell durchgängig: allgemeine Interview-Ratgeberliteratur bzw. eigene Einschätzung, **nicht empirisch validiert** – das ist eine bewusste Einschränkung des regelbasierten Ansatzes (ADR-0001) und gehört so in die kritische Evaluation, nicht verschwiegen.
+
+**Landmark-Indizes als benannte Konstanten.** Nasenspitze (Face, Index 1), linke/rechte Schulter (Pose, 11/12), linke/rechte Hüfte (Pose, 23/24) sind öffentlich dokumentierte Standard-Indizes der MediaPipe-Modelle, im Code benannt statt als magische Zahlen – falls ein Index falsch sein sollte, ist er an einer Stelle korrigierbar.
+
+## Konsequenzen
+- Positiv: alle vier Metriken sind mit synthetischen Landmark-Daten test-first entwickelt und verifiziert, ohne echte Kamera-Sessions zu brauchen. Die Abdeckungs-Schwelle verhindert irreführende Scores bei schlechten Aufnahmebedingungen.
+- Negativ/Risiken: die konkreten Zahlenwerte (Schwelle, Zielkorridore, Mindestabdeckung) sind nicht empirisch abgesichert – muss in der kritischen Evaluation offen benannt werden, nicht als validiertes Ergebnis dargestellt werden.
+- Was würde uns zwingen zu revidieren: falls sich in Slice 5 (Auswertungsseite) oder bei eigenen Testdurchläufen zeigt, dass die Schwellwerte in der Praxis unsinnige Ergebnisse liefern (z. B. fast nie "im Zielkorridor"), werden sie angepasst und die Änderung im Journal begründet – nicht die Methode verworfen.
