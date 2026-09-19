@@ -15,15 +15,22 @@ export interface Auswertung {
 // Nutzertests zeigen eine andere sinnvolle Schwelle, oder eine Quelle mit konkreten
 // Werten fuer diese Zielgruppe wird gefunden.
 const KOPFAUSRICHTUNG_SCHWELLE = 0.7
-export const KOPFAUSRICHTUNG_ZIELKORRIDOR = { min: 60, max: 80 }
+// Nachtrag 2026-09-19 (manuelle Tests, 10 Antworten, 2 Sessions): normales, engagiertes
+// Antworten lag fast durchgehend bei 95-100%, der alte obere Deckel (80%) hat das
+// faelschlich als "ausserhalb" markiert. Untere Grenze auf 70% angehoben, weil
+// natuerliches kurzes Wegdenken (73-74%) noch als gut gelten soll. Siehe ADR-0005-Nachtrag.
+export const KOPFAUSRICHTUNG_ZIELKORRIDOR = { min: 70, max: 100 }
 
 // Herkunft: allgemeine Ratgeberliteratur zu Sitzhaltung in Gespraechen, nicht
 // empirisch validiert. Anlass zur Aenderung: siehe oben.
 export const HALTUNG_ZIELKORRIDOR = { min: 0, max: 6 }
 
 // Herkunft: aus dem Klickdummy uebernommener Beispielwert, nicht empirisch validiert.
-// Anlass zur Aenderung: siehe oben.
-export const BEWEGUNGSRUHE_ZIELKORRIDOR = { min: 0.15, max: 0.45 }
+// Nachtrag 2026-09-19 (manuelle Tests, 10 Antworten, 2 Sessions): Werte lagen durchgehend
+// bei 0,04-0,20, selbst bewusst unruhiges Verhalten kam nur auf 0,12 - der alte Korridor
+// war nie erreichbar. Vorlaeufig auf den tatsaechlich beobachteten Bereich angehoben,
+// keine kontrollierte Studie. Siehe ADR-0005-Nachtrag.
+export const BEWEGUNGSRUHE_ZIELKORRIDOR = { min: 0.03, max: 0.25 }
 
 // Herkunft: eigene Einschaetzung, ab welcher Differenz ein Haltungs-Trend ueber die
 // Antwort hinweg als "Veraenderung" statt Mess-Rauschen gilt - nicht empirisch

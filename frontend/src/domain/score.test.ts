@@ -111,12 +111,20 @@ describe('berechneAuswertung', () => {
 })
 
 describe('istImZielkorridor', () => {
-  it('Kopfausrichtung 70% liegt im Zielkorridor (60-80%)', () => {
-    expect(istImZielkorridor('kopfausrichtung', 70)).toBe(true)
+  it('Kopfausrichtung 85% liegt im Zielkorridor (70-100%)', () => {
+    expect(istImZielkorridor('kopfausrichtung', 85)).toBe(true)
   })
 
-  it('Bewegungsruhe 0.61 liegt ausserhalb des Zielkorridors (0.15-0.45)', () => {
+  it('Kopfausrichtung 50% liegt ausserhalb des Zielkorridors (70-100%)', () => {
+    expect(istImZielkorridor('kopfausrichtung', 50)).toBe(false)
+  })
+
+  it('Bewegungsruhe 0.61 liegt ausserhalb des Zielkorridors (0.03-0.25)', () => {
     expect(istImZielkorridor('bewegungsruhe', 0.61)).toBe(false)
+  })
+
+  it('Bewegungsruhe 0.1 liegt im Zielkorridor (0.03-0.25)', () => {
+    expect(istImZielkorridor('bewegungsruhe', 0.1)).toBe(true)
   })
 
   it('Haltung 5 Grad liegt im Zielkorridor (0-6 Grad)', () => {
