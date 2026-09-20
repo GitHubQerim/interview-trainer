@@ -1,0 +1,34 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Session {
+  id            String     @id @default(cuid())
+  token         String
+  beruf         String
+  schwierigkeit String
+  modus         String
+  erstelltAm    DateTime   @default(now())
+  ergebnisse    Ergebnis[]
+
+  @@index([token])
+}
+
+model Ergebnis {
+  id                     String  @id @default(cuid())
+  sessionId              String
+  session                Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  frageId                String
+  frageText              String
+  abdeckung              Float
+  auswertbar             Boolean
+  kopfausrichtungProzent Float?
+  haltungGradMedian      Float?
+  haltungVerlauf         Float?
+  bewegungsruhe          Float?
+}
