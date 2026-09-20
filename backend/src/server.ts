@@ -7,7 +7,7 @@ const app = Fastify({ logger: true })
 await app.register(registerFragenRoute)
 await app.register(registerVerlaufRoute)
 
-const PORT = 3001
+const PORT = Number(process.env.PORT) || 3001
 
 app.listen({ port: PORT }, (error) => {
   if (error) {

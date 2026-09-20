@@ -1,0 +1,55 @@
+@use '../../styles/tokens' as *;
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
+  max-width: 720px;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-2;
+}
+
+.tab {
+  padding: $space-2 $space-4;
+  border: 1px solid $color-border;
+  border-radius: $radius-pill;
+  background: $color-surface;
+  color: $color-text;
+  cursor: pointer;
+}
+
+.tabActive {
+  background: $color-text;
+  color: $color-surface;
+  border-color: $color-text;
+}
+
+.sessionInfo {
+  color: $color-text-muted;
+  margin: 0;
+}
+
+.hinweis {
+  color: $color-warn;
+}
+
+.buttons {
+  display: flex;
+  gap: $space-2;
+}
+
+.button {
+  padding: $space-2 $space-4;
+  border-radius: $radius-pill;
+  cursor: pointer;
+}
+
+.buttonSecondary {
+  border: 1px solid $color-border;
+  background: $color-surface;
+  color: $color-text;
+}

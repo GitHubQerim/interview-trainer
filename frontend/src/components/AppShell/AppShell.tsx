@@ -6,6 +6,7 @@ import { AuswertungScreen } from '../AuswertungScreen/AuswertungScreen'
 import { DatenschutzActions } from '../DatenschutzActions/DatenschutzActions'
 import { InterviewScreen } from '../InterviewScreen/InterviewScreen'
 import { SetupScreen } from '../SetupScreen/SetupScreen'
+import { VerlaufScreen } from '../VerlaufScreen/VerlaufScreen'
 import styles from './AppShell.module.scss'
 
 type Tab = 'setup' | 'interview' | 'auswertung' | 'verlauf'
@@ -69,6 +70,7 @@ export function AppShell() {
             onVerlaufAnsehen={() => setActiveTab('verlauf')}
           />
         )}
+        {activeTab === 'verlauf' && <VerlaufScreen onZurueck={() => setActiveTab('setup')} />}
       </main>
     </div>
   )

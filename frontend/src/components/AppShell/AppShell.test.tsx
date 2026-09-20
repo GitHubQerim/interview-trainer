@@ -9,6 +9,7 @@ describe('AppShell', () => {
     vi.restoreAllMocks()
     vi.spyOn(fragenkatalog, 'getFragen').mockResolvedValue([{ id: '1', text: 'Frage' }])
     vi.spyOn(verlaufApi, 'speichereSession').mockResolvedValue(undefined)
+    vi.spyOn(verlaufApi, 'ladeVerlauf').mockResolvedValue([])
   })
 
   it('zeigt initial den Setup-Tab', () => {
@@ -50,6 +51,17 @@ describe('AppShell', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Interview starten' }))
 
     expect(screen.queryByRole('button', { name: 'Meine Daten löschen' })).not.toBeInTheDocument()
+  })
+
+  it('zeigt den Verlauf-Screen statt einer Leerseite im Verlauf-Tab', async () => {
+    render(<AppShell />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Verlauf' }))
+
+    expect(screen.getByRole('heading', { name: 'Verlauf' })).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText('Noch keine gespeicherten Übungssessions.')).toBeInTheDocument()
+    })
   })
 
   it('zeigt nach Abschluss des Interviews die Auswertung', async () => {

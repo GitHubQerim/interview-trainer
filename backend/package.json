@@ -11,7 +11,7 @@
     "lint": "oxlint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "postinstall": "prisma generate && prisma migrate deploy"
+    "postinstall": "{ test -f .env || cp .env.example .env; } && prisma generate && prisma migrate deploy"
   },
   "dependencies": {
     "@prisma/client": "^6.12.0",

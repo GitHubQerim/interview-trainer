@@ -1,15 +1,10 @@
 import { useEffect, useState } from 'react'
 import { getFragen, type Schwierigkeit } from '../../domain/fragenkatalog'
-import type { Modus, SessionConfig } from '../../domain/session'
+import { MODUS_OPTIONEN, type Modus, type SessionConfig } from '../../domain/session'
 import styles from './SetupScreen.module.scss'
 
 const BERUF_VORSCHLAEGE = ['Softwareentwicklung', 'Vertrieb', 'Pflege', 'Projektmanagement']
 const SCHWIERIGKEITEN: Schwierigkeit[] = ['leicht', 'mittel', 'hart']
-const MODI: Array<{ value: Modus; titel: string; untertitel: string }> = [
-  { value: 'video-ton', titel: 'Video und Ton', untertitel: 'volle Auswertung' },
-  { value: 'nur-ton', titel: 'Nur Ton', untertitel: 'Sprache, keine Kamera' },
-  { value: 'nur-fragen', titel: 'Nur Fragen', untertitel: 'ohne Messung' },
-]
 
 interface SetupScreenProps {
   onStart: (config: SessionConfig) => void
@@ -91,7 +86,7 @@ export function SetupScreen({ onStart }: SetupScreenProps) {
           <div>
             <span className={styles.label}>Modus</span>
             <div className={styles.modusRow}>
-              {MODI.map((option) => (
+              {MODUS_OPTIONEN.map((option) => (
                 <button
                   key={option.value}
                   type="button"

@@ -14,3 +14,5 @@ npm run test
 ```
 
 Kamera-Analyse (MediaPipe im Web Worker) funktioniert nur mit `npm run build && npm run preview`, nicht mit `npm run dev` (bekannter Vite-Dev-Server-Bug mit klassischen Workern, siehe ADR-0004).
+
+`npm run test` schließt einen echten Integrationstest ein (`src/domain/verlaufApi.integration.test.ts`), der einen echten Fastify-Server gegen eine eigene, isolierte SQLite-Testdatei startet – setzt voraus, dass `backend/` bereits per `npm install` eingerichtet ist (Prisma-Client generiert, Migrationen vorhanden).

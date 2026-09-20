@@ -1,0 +1,26 @@
+@use '../../styles/tokens' as *;
+
+.card {
+  padding: $space-6;
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+}
+
+.frageText {
+  color: $color-text-muted;
+  margin: 0 0 $space-2;
+}
+
+.hinweis {
+  color: $color-warn;
+}
+
+.verlaufText {
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+  margin-top: -$space-2;
+}
