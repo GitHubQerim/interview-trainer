@@ -17,6 +17,11 @@ Wir wählen Option 2: Analyse läuft ausschließlich clientseitig; ans Backend g
 - Negativ/Risiken: Clientseitige Analyse ist rechenintensiver für schwächere Geräte; kein serverseitiges Debugging der Rohdaten möglich, falls ein Score falsch aussieht (nur die Kennzahl ist im Zweifel nachvollziehbar, nicht das Ausgangsbild).
 - Würde uns zwingen zu revidieren: wenn MediaPipe im Web Worker auf relevanten Zielgeräten nicht performant genug läuft und eine serverseitige Analyse unumgänglich würde – dann müsste die Datenschutzeinordnung neu bewertet werden (ggf. explizite Einwilligung statt "kein Personenbezug").
 
+## Nachtrag 2026-09-21 (Redefluss-Slice, siehe ADR-0008)
+Bis hierhin war `getUserMedia({video:true})` die einzige Mediennutzung – kein Mikrofonzugriff existierte. Mit der vierten Kennzahl "Redefluss" wird das Mikrofon real angefragt (`getUserMedia({video:true, audio:{...}})`), zusätzlich zum Kamerabild. Konsequenzen für diese ADR:
+- Der Berechtigungsdialog des Browsers fragt jetzt Kamera **und** Mikrofon gemeinsam ab (ein zusätzlicher, sichtbarer Schritt im Ablauf, den es vorher nicht gab). Bei fehlendem Mikrofon (Gerät ohne Mikrofon, `NotFoundError`) fällt der Code auf reines Video zurück; bei verweigerter Berechtigung (`NotAllowedError`) gibt es bewusst keinen zweiten Versuch, da Chrome Kamera und Mikrofon in diesem Fall meist gemeinsam blockiert.
+- Die Grundaussage dieser ADR bleibt unverändert gültig: Audio verlässt das Gerät genauso wenig wie Video – die Lautstärke-Analyse (VAD) läuft im selben clientseitigen Kontext, ans Backend geht weiterhin nur die aggregierte Kennzahl. Die optionale Füllwort-Erkennung (Transkription) ist die konkrete Realisierung des bis dahin nur prosaisch formulierten `processLocally`-Flags – Details, Abwägung und Abgrenzung zu ADR-0004 in ADR-0008.
+
 ## Junior-Schutz-Fragen
 - **10x mehr Nutzer/Daten?** Unkritisch für Datenschutz (keine zentrale Video/Audio-Speicherung); Backend-Last bleibt klein, da nur Kennzahlen persistiert werden.
 - **User-Löschung (DSGVO)?** Anonymes Token macht "Lösch mich" trivial: Löschung des lokalen Tokens + zugehöriger Kennzahlen-Zeilen im Backend, kein Konto/keine E-Mail-Verknüpfung, die anderswo gelöscht werden müsste. Export-/Löschfunktion ist ohnehin als Pflicht-Feature vorgesehen.
