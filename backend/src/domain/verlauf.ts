@@ -7,6 +7,9 @@ export interface ErgebnisEingabe {
   haltungGradMedian: number | null
   haltungVerlauf: number | null
   bewegungsruhe: number | null
+  redeflussProzent: number | null
+  laengstePauseSekunden: number | null
+  fuellwoerterProMinute: number | null
 }
 
 export interface SessionEingabe {

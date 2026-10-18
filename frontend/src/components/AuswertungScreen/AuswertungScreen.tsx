@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { FragenErgebnis } from '../../domain/interview'
+import { ergaenzeRedefluss } from '../../domain/redefluss'
 import { berechneAuswertung } from '../../domain/score'
 import { FrageAuswertung } from '../FrageAuswertung/FrageAuswertung'
 import styles from './AuswertungScreen.module.scss'
@@ -16,7 +17,14 @@ export function AuswertungScreen({ ergebnisse, onNochmalUeben, onVerlaufAnsehen 
   const ausgewaehlteFrage = ergebnisse[ausgewaehlterIndex]
 
   const auswertung = useMemo(
-    () => (ausgewaehlteFrage ? berechneAuswertung(ausgewaehlteFrage.ergebnisse) : null),
+    () =>
+      ausgewaehlteFrage
+        ? ergaenzeRedefluss(
+            berechneAuswertung(ausgewaehlteFrage.ergebnisse),
+            ausgewaehlteFrage.audioErgebnisse,
+            ausgewaehlteFrage.transkript,
+          )
+        : null,
     [ausgewaehlteFrage],
   )
 
@@ -42,11 +50,6 @@ export function AuswertungScreen({ ergebnisse, onNochmalUeben, onVerlaufAnsehen 
       </div>
 
       <FrageAuswertung frageText={ausgewaehlteFrage.frage.text} auswertung={auswertung} />
-
-      <div className={styles.transkript}>
-        <strong>Transkript</strong>
-        <p>Transkription ist deaktiviert.</p>
-      </div>
 
       <div className={styles.buttons}>
         <button type="button" className={`${styles.button} ${styles.buttonPrimary}`} onClick={onNochmalUeben}>

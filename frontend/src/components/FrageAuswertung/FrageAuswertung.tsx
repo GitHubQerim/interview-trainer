@@ -5,6 +5,7 @@ import {
   haltungsVerlaufLabel,
   istImZielkorridor,
   KOPFAUSRICHTUNG_ZIELKORRIDOR,
+  REDEFLUSS_ZIELKORRIDOR,
 } from '../../domain/score'
 import { MetrikBalken } from '../MetrikBalken/MetrikBalken'
 import styles from './FrageAuswertung.module.scss'
@@ -74,6 +75,38 @@ export function FrageAuswertung({ frageText, auswertung }: FrageAuswertungProps)
               messmethode="Bewegung des Schulter-Mittelpunkts zwischen aufeinanderfolgenden Aufnahmen, normiert auf die Schulterbreite (unabhängig vom Kameraabstand) und auf Sekunden (unabhängig von der Framerate) - ein normierter Index ohne Einheit, kein Prozent- oder Gradwert. Zielkorridor aus dem Klickdummy übernommen, nicht empirisch validiert."
             />
           )}
+        </>
+      )}
+
+      {/* Unabhaengig von auswertung.auswertbar (das gilt nur fuer die Video-Metriken) -
+          Redefluss stammt aus Audio-Frames und kann auch bei lueckenhafter Videoaufnahme
+          vorliegen, oder umgekehrt fehlen, wenn kein Mikrofonzugriff bestand. */}
+      {auswertung.redeflussProzent === null ? (
+        <p className={styles.hinweis}>Keine Redefluss-Daten (Mikrofon nicht verfügbar oder kein Sprechen erkannt).</p>
+      ) : (
+        <>
+          <MetrikBalken
+            label="Redefluss (%)"
+            wert={auswertung.redeflussProzent}
+            einheit="%"
+            anzeigeMin={0}
+            anzeigeMax={100}
+            zielkorridorMin={REDEFLUSS_ZIELKORRIDOR.min}
+            zielkorridorMax={REDEFLUSS_ZIELKORRIDOR.max}
+            imZielkorridor={istImZielkorridor('redefluss', auswertung.redeflussProzent)}
+            formatWert={(wert) => `${Math.round(wert)}%`}
+            messmethode="Anteil der Sprechzeit innerhalb der eigentlichen Antwort (Vorlese-/Bedenkzeit am Anfang und Ende ausgeklammert), gemessen über die Mikrofon-Lautstärke - keine Spracherkennung nötig. Zielkorridor eigene Einschätzung, nicht empirisch validiert."
+          />
+          {auswertung.laengstePauseSekunden !== null && (
+            <p className={styles.verlaufText}>
+              Längste Pause in der Antwort: {auswertung.laengstePauseSekunden.toFixed(1)}s
+            </p>
+          )}
+          <p className={styles.verlaufText}>
+            {auswertung.fuellwoerterProMinute !== null
+              ? `Füllwörter: ${auswertung.fuellwoerterProMinute.toFixed(1)} pro Minute Sprechzeit`
+              : 'Füllwort-Erkennung: keine Daten (nicht aktiviert oder zu kurz gesprochen).'}
+          </p>
         </>
       )}
     </div>

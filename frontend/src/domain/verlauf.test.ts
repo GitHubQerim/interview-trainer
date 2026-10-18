@@ -8,6 +8,9 @@ const AUSWERTUNG: Auswertung = {
   haltungGradMedian: 2.1,
   haltungVerlauf: 0.5,
   bewegungsruhe: 0.1,
+  redeflussProzent: null,
+  laengstePauseSekunden: null,
+  fuellwoerterProMinute: null,
 }
 
 vi.mock('./score', () => ({
@@ -19,8 +22,8 @@ const { aggregiereSession } = await import('./verlauf')
 describe('aggregiereSession', () => {
   it('mappt jede Frage auf ihre Auswertung inkl. frageId und frageText', () => {
     const ergebnisse = [
-      { frage: { id: 'se-leicht-1', text: 'Frage 1' }, ergebnisse: [] },
-      { frage: { id: 'se-leicht-2', text: 'Frage 2' }, ergebnisse: [] },
+      { frage: { id: 'se-leicht-1', text: 'Frage 1' }, ergebnisse: [], audioErgebnisse: [], transkript: '' },
+      { frage: { id: 'se-leicht-2', text: 'Frage 2' }, ergebnisse: [], audioErgebnisse: [], transkript: '' },
     ]
 
     const eintraege = aggregiereSession(ergebnisse)

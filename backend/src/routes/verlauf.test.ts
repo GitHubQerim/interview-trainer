@@ -33,6 +33,9 @@ const GUELTIGER_BODY = {
       haltungGradMedian: 2.1,
       haltungVerlauf: 0.5,
       bewegungsruhe: 0.1,
+      redeflussProzent: 80,
+      laengstePauseSekunden: 1.5,
+      fuellwoerterProMinute: 4,
     },
   ],
 }

@@ -77,6 +77,8 @@ describe('AppShell', () => {
     })
     fireEvent.click(screen.getByRole('button', { name: 'Nächste Frage' }))
 
-    expect(screen.getByRole('heading', { name: 'Auswertung' })).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Auswertung' })).toBeInTheDocument()
+    })
   })
 })

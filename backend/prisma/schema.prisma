@@ -31,4 +31,7 @@ model Ergebnis {
   haltungGradMedian      Float?
   haltungVerlauf         Float?
   bewegungsruhe          Float?
+  redeflussProzent       Float?
+  laengstePauseSekunden  Float?
+  fuellwoerterProMinute  Float?
 }

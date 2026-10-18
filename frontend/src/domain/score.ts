@@ -8,6 +8,12 @@ export interface Auswertung {
   haltungGradMedian: number | null
   haltungVerlauf: number | null
   bewegungsruhe: number | null
+  // Diese drei Felder kann berechneAuswertung() nie selbst befuellen (sie sieht nur
+  // Video-Frames) - sie werden von domain/redefluss.ts's ergaenzeRedefluss() eine
+  // Ebene hoeher aus Audio-Frames/Transkript nachgetragen. Hier immer nur `null`.
+  redeflussProzent: number | null
+  laengstePauseSekunden: number | null
+  fuellwoerterProMinute: number | null
 }
 
 // Herkunft: allgemeine Interview-Ratgeberliteratur (z.B. Empfehlung "moeglichst oft
@@ -32,6 +38,11 @@ export const HALTUNG_ZIELKORRIDOR = { min: 0, max: 6 }
 // keine kontrollierte Studie. Siehe ADR-0005-Nachtrag.
 export const BEWEGUNGSRUHE_ZIELKORRIDOR = { min: 0.03, max: 0.25 }
 
+// Herkunft: eigene Einschaetzung, nicht empirisch validiert - Redefluss (Sprechanteil
+// innerhalb des bereits um Vorlese-/Bedenkzeit bereinigten Antwortbereichs) existiert
+// noch nicht lange genug fuer echte Testdaten. Siehe ADR-0008.
+export const REDEFLUSS_ZIELKORRIDOR = { min: 60, max: 95 }
+
 // Herkunft: eigene Einschaetzung, ab welcher Differenz ein Haltungs-Trend ueber die
 // Antwort hinweg als "Veraenderung" statt Mess-Rauschen gilt - nicht empirisch
 // validiert. Anlass zur Aenderung: echte Nutzertests zeigen, dass 1 Grad zu
@@ -48,6 +59,9 @@ const UNAUSWERTBAR: Omit<Auswertung, 'abdeckung' | 'auswertbar'> = {
   haltungGradMedian: null,
   haltungVerlauf: null,
   bewegungsruhe: null,
+  redeflussProzent: null,
+  laengstePauseSekunden: null,
+  fuellwoerterProMinute: null,
 }
 
 function istErkannt(frame: FrameErgebnis): boolean {
@@ -177,6 +191,9 @@ export function berechneAuswertung(ergebnisse: FrameErgebnis[]): Auswertung {
     haltungGradMedian: median(haltungswinkelWerte(erkannteFrames)),
     haltungVerlauf: berechneHaltungVerlauf(erkannteFrames),
     bewegungsruhe: berechneBewegungsruhe(erkannteFrames),
+    redeflussProzent: null,
+    laengstePauseSekunden: null,
+    fuellwoerterProMinute: null,
   }
 }
 
@@ -190,13 +207,18 @@ export function haltungsVerlaufLabel(verlauf: number | null): string {
   return verlauf > 0 ? 'nimmt zu' : 'nimmt ab'
 }
 
-export function istImZielkorridor(metrik: 'kopfausrichtung' | 'haltung' | 'bewegungsruhe', wert: number): boolean {
+export function istImZielkorridor(
+  metrik: 'kopfausrichtung' | 'haltung' | 'bewegungsruhe' | 'redefluss',
+  wert: number,
+): boolean {
   const korridor =
     metrik === 'kopfausrichtung'
       ? KOPFAUSRICHTUNG_ZIELKORRIDOR
       : metrik === 'haltung'
         ? HALTUNG_ZIELKORRIDOR
-        : BEWEGUNGSRUHE_ZIELKORRIDOR
+        : metrik === 'bewegungsruhe'
+          ? BEWEGUNGSRUHE_ZIELKORRIDOR
+          : REDEFLUSS_ZIELKORRIDOR
 
   return wert >= korridor.min && wert <= korridor.max
 }

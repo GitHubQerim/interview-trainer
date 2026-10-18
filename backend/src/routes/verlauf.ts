@@ -17,6 +17,9 @@ const ERGEBNIS_SCHEMA = {
     'haltungGradMedian',
     'haltungVerlauf',
     'bewegungsruhe',
+    'redeflussProzent',
+    'laengstePauseSekunden',
+    'fuellwoerterProMinute',
   ],
   properties: {
     frageId: { type: 'string', minLength: 1 },
@@ -27,6 +30,9 @@ const ERGEBNIS_SCHEMA = {
     haltungGradMedian: { type: ['number', 'null'] },
     haltungVerlauf: { type: ['number', 'null'] },
     bewegungsruhe: { type: ['number', 'null'] },
+    redeflussProzent: { type: ['number', 'null'] },
+    laengstePauseSekunden: { type: ['number', 'null'] },
+    fuellwoerterProMinute: { type: ['number', 'null'] },
   },
 } as const
 

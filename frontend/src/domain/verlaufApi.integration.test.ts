@@ -3,6 +3,7 @@ import { rmSync } from 'node:fs'
 import path from 'node:path'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import type { FragenErgebnis } from './interview'
+import { ergaenzeRedefluss } from './redefluss'
 import { berechneAuswertung } from './score'
 import { ladeVerlauf, loescheVerlauf, speichereSession } from './verlaufApi'
 
@@ -63,6 +64,8 @@ function auswertbareErgebnisse(frageId: string, frageText: string): FragenErgebn
       faceLandmarks: zentrierteFace,
       poseLandmarks: aufrechtePose,
     })),
+    audioErgebnisse: [],
+    transkript: '',
   }
 }
 
@@ -99,7 +102,11 @@ describe('verlaufApi – echter Server, echte SQLite-Datei, kein Mock', () => {
   it('speichert eine Session per speichereSession und liest sie unverändert per ladeVerlauf zurück', async () => {
     const config = { beruf: 'Softwareentwicklung', schwierigkeit: 'leicht' as const, modus: 'video-ton' as const }
     const frageErgebnis = auswertbareErgebnisse('int-1', 'Testfrage für den Integrationstest')
-    const erwarteteAuswertung = berechneAuswertung(frageErgebnis.ergebnisse)
+    const erwarteteAuswertung = ergaenzeRedefluss(
+      berechneAuswertung(frageErgebnis.ergebnisse),
+      frageErgebnis.audioErgebnisse,
+      frageErgebnis.transkript,
+    )
 
     await speichereSession(config, [frageErgebnis])
 

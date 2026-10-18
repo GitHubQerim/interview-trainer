@@ -22,6 +22,7 @@ function mockAnalysisWorker() {
       videoRef: { current: null },
       start: vi.fn().mockResolvedValue(undefined),
       stop: vi.fn(),
+      stream: null,
     }
   })
 }
@@ -49,9 +50,12 @@ describe('InterviewScreen', () => {
     render(<InterviewScreen config={videoTonConfig} onFinished={vi.fn()} />)
 
     await waitFor(() => expect(screen.getByText('Frage eins')).toBeInTheDocument())
+    // advance() ist jetzt async (wartet auf beendeFuellwortErkennung()) - der
+    // Klick-Handler stoesst nur an, die Statusaktualisierung kommt einen Mikrotask
+    // spaeter, deshalb waitFor statt einer sofortigen Assertion.
     fireEvent.click(screen.getByRole('button', { name: 'Nächste Frage' }))
 
-    expect(screen.getByText('Frage zwei')).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByText('Frage zwei')).toBeInTheDocument())
   })
 
   it('wechselt automatisch nach Ablauf der Fragendauer', async () => {
@@ -84,10 +88,14 @@ describe('InterviewScreen', () => {
     act(() => {
       capturedOnResult?.({ timestamp: 1, durationMs: 5, faceLandmarks: [], poseLandmarks: [] })
     })
+    // Jeder Klick muss vollstaendig verarbeitet sein (advance() ist async und hat
+    // einen Doppelaufruf-Guard), bevor der naechste Klick feuert - sonst wuerde der
+    // Guard den zweiten Klick als Doppelaufruf verwerfen.
     fireEvent.click(screen.getByRole('button', { name: 'Nächste Frage' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Nächste Frage' }))
+    await waitFor(() => expect(screen.getByText('Frage zwei')).toBeInTheDocument())
 
-    expect(onFinished).toHaveBeenCalledTimes(1)
+    fireEvent.click(screen.getByRole('button', { name: 'Nächste Frage' }))
+    await waitFor(() => expect(onFinished).toHaveBeenCalledTimes(1))
     const ergebnisse = onFinished.mock.calls[0]?.[0]
     expect(ergebnisse).toHaveLength(2)
     expect(ergebnisse[0].frage.text).toBe('Frage eins')

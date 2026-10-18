@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { getFragen, type Frage } from '../../domain/fragenkatalog'
-import type { FragenErgebnis } from '../../domain/interview'
+import type { AudioFrameErgebnis, FragenErgebnis } from '../../domain/interview'
 import type { SessionConfig } from '../../domain/session'
 import { formatZeit } from '../../domain/zeit'
 import { berechneAuswertung, type Auswertung } from '../../domain/score'
 import { useAnalysisWorker, type AnalysisResultPayload } from '../../media/useAnalysisWorker'
+import { useFuellwortErkennung } from '../../media/useFuellwortErkennung'
+import { useRedeflussVad } from '../../media/useRedeflussVad'
 import { DebugOverlay } from './DebugOverlay'
 import styles from './InterviewScreen.module.scss'
 
@@ -26,13 +28,16 @@ export function InterviewScreen({
   const [fragen, setFragen] = useState<Frage[] | null>(null)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [elapsed, setElapsed] = useState(0)
+  const [istImWechsel, setIstImWechsel] = useState(false)
 
   const currentIndexRef = useRef(0)
   useEffect(() => {
     currentIndexRef.current = currentIndex
   }, [currentIndex])
   const ergebnisseRef = useRef<FragenErgebnis['ergebnisse']>([])
+  const audioErgebnisseRef = useRef<AudioFrameErgebnis[]>([])
   const alleErgebnisseRef = useRef<FragenErgebnis[]>([])
+  const istImWechselRef = useRef(false)
 
   // Debug-Overlay (Branch debug/live-overlay, vermutlich wieder entfernt).
   const [debugModus, setDebugModus] = useState(false)
@@ -41,7 +46,7 @@ export function InterviewScreen({
   const [framerate, setFramerate] = useState(0)
   const resultZeitstempelRef = useRef<number[]>([])
 
-  const { status, error, videoRef, start } = useAnalysisWorker((result) => {
+  const { status, error, videoRef, start, stream } = useAnalysisWorker((result) => {
     ergebnisseRef.current = [
       ...ergebnisseRef.current,
       { zeitstempel: result.timestamp, faceLandmarks: result.faceLandmarks, poseLandmarks: result.poseLandmarks },
@@ -56,6 +61,17 @@ export function InterviewScreen({
     setFramerate(resultZeitstempelRef.current.length / (FRAMERATE_FENSTER_MS / 1000))
   })
 
+  useRedeflussVad(config.modus === 'video-ton' ? stream : null, (frame) => {
+    audioErgebnisseRef.current = [...audioErgebnisseRef.current, frame]
+  })
+
+  const {
+    status: fuellwortStatus,
+    aktiviere: aktiviereFuellwortErkennung,
+    starteFuerFrage: starteFuellwortErkennung,
+    beendeFrage: beendeFuellwortErkennung,
+  } = useFuellwortErkennung()
+
   useEffect(() => {
     getFragen(config.beruf, config.schwierigkeit).then(setFragen)
   }, [config.beruf, config.schwierigkeit])
@@ -66,29 +82,68 @@ export function InterviewScreen({
     }
   }, [config.modus, start])
 
+  // Startet die Fuellwort-Erkennung neu, sobald sie verfuegbar wird (Einwilligung
+  // kann waehrend einer beliebigen Frage erteilt werden) UND bei jedem Fragenwechsel
+  // (currentIndex aendert sich in advance()). Ein Ref haelt fest, fuer welchen Index
+  // schon gestartet wurde, damit dieser Effekt nicht bei jedem Render erneut startet.
+  const letzterGestarteterIndexRef = useRef(-1)
+  useEffect(() => {
+    if (
+      config.modus === 'video-ton' &&
+      fuellwortStatus === 'available' &&
+      letzterGestarteterIndexRef.current !== currentIndex
+    ) {
+      letzterGestarteterIndexRef.current = currentIndex
+      starteFuellwortErkennung()
+    }
+  }, [config.modus, fuellwortStatus, currentIndex, starteFuellwortErkennung])
+
   const advance = useCallback(
-    (fragenListe: Frage[]) => {
+    async (fragenListe: Frage[]) => {
+      // Verhindert doppelte Verarbeitung, wenn ein Doppelklick auf "Naechste Frage"
+      // oder der ablaufende Auto-Advance-Timer advance() erneut ausloest, waehrend
+      // die erste Ausfuehrung noch auf beendeFuellwortErkennung() wartet.
+      if (istImWechselRef.current) {
+        return
+      }
+      istImWechselRef.current = true
+      setIstImWechsel(true)
+
       const aktuelleFrage = fragenListe[currentIndexRef.current]
       if (!aktuelleFrage) {
+        istImWechselRef.current = false
+        setIstImWechsel(false)
         return
       }
 
+      const transkript = await beendeFuellwortErkennung()
+
       alleErgebnisseRef.current = [
         ...alleErgebnisseRef.current,
-        { frage: aktuelleFrage, ergebnisse: ergebnisseRef.current },
+        {
+          frage: aktuelleFrage,
+          ergebnisse: ergebnisseRef.current,
+          audioErgebnisse: audioErgebnisseRef.current,
+          transkript,
+        },
       ]
       ergebnisseRef.current = []
+      audioErgebnisseRef.current = []
       setElapsed(0)
 
       if (currentIndexRef.current + 1 >= fragenListe.length) {
         onFinished(alleErgebnisseRef.current)
+        istImWechselRef.current = false
+        setIstImWechsel(false)
         return
       }
 
       currentIndexRef.current += 1
       setCurrentIndex(currentIndexRef.current)
+      istImWechselRef.current = false
+      setIstImWechsel(false)
     },
-    [onFinished],
+    [onFinished, beendeFuellwortErkennung],
   )
 
   useEffect(() => {
@@ -105,7 +160,7 @@ export function InterviewScreen({
 
   useEffect(() => {
     if (fragen && elapsed >= fragendauerSekunden) {
-      advance(fragen)
+      void advance(fragen)
     }
   }, [elapsed, fragendauerSekunden, fragen, advance])
 
@@ -156,6 +211,24 @@ export function InterviewScreen({
           </label>
         )}
 
+        {config.modus === 'video-ton' && fuellwortStatus === 'downloadable' && (
+          <p className={styles.fuellwortHinweis}>
+            Das deutsche Sprachpaket wird einmalig über Chrome von Google geladen. Danach läuft die Erkennung
+            vollständig lokal.{' '}
+            <button type="button" onClick={aktiviereFuellwortErkennung}>
+              Füllwort-Erkennung aktivieren
+            </button>
+          </p>
+        )}
+        {config.modus === 'video-ton' && fuellwortStatus === 'downloading' && (
+          <p className={styles.fuellwortHinweis}>Sprachpaket wird geladen...</p>
+        )}
+        {config.modus === 'video-ton' && fuellwortStatus === 'unavailable' && (
+          <p className={styles.fuellwortHinweis}>
+            Füllwort-Erkennung in diesem Browser nicht verfügbar - Redefluss wird trotzdem gemessen.
+          </p>
+        )}
+
         <div className={styles.footer}>
           <span className={styles.analyseStatus}>
             {config.modus === 'video-ton' && (
@@ -169,7 +242,7 @@ export function InterviewScreen({
         </div>
       </div>
 
-      <button type="button" className={styles.nextButton} onClick={() => advance(fragen)}>
+      <button type="button" className={styles.nextButton} onClick={() => void advance(fragen)} disabled={istImWechsel}>
         Nächste Frage
       </button>
     </div>

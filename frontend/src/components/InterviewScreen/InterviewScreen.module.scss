@@ -71,6 +71,12 @@
   display: inline-block;
 }
 
+.fuellwortHinweis {
+  margin: 0;
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+}
+
 .nextButton {
   align-self: flex-start;
   padding: $space-2 $space-4;

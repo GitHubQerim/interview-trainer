@@ -26,6 +26,8 @@ function auswertbareErgebnisse(fragenId: string, fragenText: string): FragenErge
       faceLandmarks: ZENTRIERTE_FACE,
       poseLandmarks: AUFRECHTE_POSE,
     })),
+    audioErgebnisse: [],
+    transkript: '',
   }
 }
 
@@ -40,6 +42,8 @@ function luckenhafteErgebnisse(fragenId: string, fragenText: string): FragenErge
         poseLandmarks: [],
       })),
     ],
+    audioErgebnisse: [],
+    transkript: '',
   }
 }
 

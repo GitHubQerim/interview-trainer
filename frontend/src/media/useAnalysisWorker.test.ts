@@ -37,6 +37,54 @@ describe('useAnalysisWorker', () => {
     expect(result.current.status).toBe('permission-denied')
   })
 
+  it('faellt bei fehlendem Mikrofon (NotFoundError) auf reines Video zurueck', async () => {
+    vi.stubGlobal(
+      'Worker',
+      class {
+        constructor() {
+          return new MockWorker()
+        }
+      },
+    )
+    const aufrufe: (MediaStreamConstraints | undefined)[] = []
+    vi.stubGlobal('navigator', {
+      mediaDevices: {
+        getUserMedia: vi.fn((constraints?: MediaStreamConstraints) => {
+          aufrufe.push(constraints)
+          if (aufrufe.length === 1) {
+            return Promise.reject(new DOMException('kein Mikrofon', 'NotFoundError'))
+          }
+          return Promise.resolve(fakeStream())
+        }),
+      },
+    })
+
+    const { result } = renderHook(() => useAnalysisWorker())
+
+    await act(async () => {
+      await result.current.start()
+    })
+
+    expect(aufrufe).toHaveLength(2)
+    expect(aufrufe[0]).toMatchObject({ video: true, audio: expect.anything() })
+    expect(aufrufe[1]).toEqual({ video: true })
+    expect(result.current.status).not.toBe('permission-denied')
+  })
+
+  it('versucht bei verweigerter Berechtigung (NotAllowedError) keinen zweiten Anlauf', async () => {
+    const getUserMedia = vi.fn(() => Promise.reject(new DOMException('verweigert', 'NotAllowedError')))
+    vi.stubGlobal('navigator', { mediaDevices: { getUserMedia } })
+
+    const { result } = renderHook(() => useAnalysisWorker())
+
+    await act(async () => {
+      await result.current.start()
+    })
+
+    expect(getUserMedia).toHaveBeenCalledTimes(1)
+    expect(result.current.status).toBe('permission-denied')
+  })
+
   it('wechselt zu ready, sobald der Worker "ready" meldet', async () => {
     let createdWorker: MockWorker | undefined
     vi.stubGlobal(
