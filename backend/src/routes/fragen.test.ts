@@ -26,7 +26,7 @@ describe('GET /api/fragen', () => {
 
     const response = await app.inject({
       method: 'GET',
-      url: '/api/fragen?beruf=Vertrieb&schwierigkeit=leicht',
+      url: '/api/fragen?beruf=Astronaut&schwierigkeit=leicht',
     })
 
     expect(response.statusCode).toBe(200)
