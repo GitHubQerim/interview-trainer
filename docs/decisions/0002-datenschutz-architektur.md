@@ -27,3 +27,6 @@ Bis hierhin war `getUserMedia({video:true})` die einzige Mediennutzung – kein 
 - **User-Löschung (DSGVO)?** Anonymes Token macht "Lösch mich" trivial: Löschung des lokalen Tokens + zugehöriger Kennzahlen-Zeilen im Backend, kein Konto/keine E-Mail-Verknüpfung, die anderswo gelöscht werden müsste. Export-/Löschfunktion ist ohnehin als Pflicht-Feature vorgesehen.
 - **Migration falls falsch?** Client-Analyse ist austauschbar, solange die Backend-Schnittstelle bei "aggregierte Kennzahl" bleibt – ein Wechsel auf Server-Analyse würde nur die Datenschutz-Einordnung ändern, nicht zwingend das API-Schema.
 - **Löst die einfachste Option das Problem?** Ja, "gar kein Backend" (Option 3) wäre einfacher, erfüllt aber die eigene Feature-Zusage (Verlauf/Export/Löschen) nicht – Option 2 ist die einfachste Option, die die Anforderung noch erfüllt.
+
+**Nachtrag 2026-10-21:** Die Kamera geht jetzt optional schon im Setup an (Vorschau), aber nur auf ausdrücklichen Klick und ohne Mikrofon; Details und Begründung in ADR-0009. Die Aussage "kein Video/Audio ans Backend" bleibt unverändert wahr.
+

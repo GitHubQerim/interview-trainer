@@ -48,3 +48,20 @@ Beim ersten manuellen Test blieb der Status in echtem Chrome über 60 Sekunden b
 - Positiv: erfüllt die zugesagte vierte Kennzahl vollständig, inklusive einer echten (nicht nur behaupteten) On-Device-Garantie für die optionale Transkription – `processLocally` aus ADR-0002 hat jetzt einen konkreten, verifizierten Mechanismus statt reiner Absicht.
 - Negativ/Risiken: Füllwort-Erkennung funktioniert nur in Chromium-Browsern mit dieser experimentellen API; die Füllwortliste ist unvalidiert und überschätzt systematisch; die Rauschboden-Schätzung hat eine dokumentierte Schwäche bei sehr flüssigem Sprechen.
 - Würde uns zwingen zu revidieren: falls sich in weiteren Browsern zeigt, dass `SpeechRecognition.available()` nicht verlässlich `processLocally` respektiert (z. B. heimlich doch an einen Server sendet) – dann müsste die gesamte Füllwort-Erkennung entfernt oder durch eine WASM-Lösung ersetzt werden.
+
+## Nachtrag 2026-10-21 – Schwellenlogik versagte bei fließendem Sprechen; Transkript-Lebensdauer präzisiert
+
+**Fehler.** Die oben beschriebene Rauschboden-Schätzung (10. Perzentil der gesamten Aufnahme, Sprechschwelle = 3 × Rauschboden) setzt voraus, dass mindestens 10 % der Aufnahme still sind. Wer die ganze Antwort über spricht, hat ein Perzentil auf Sprechpegel; die Schwelle liegt dann über fast allem Gesprochenen. Im manuellen Test mit echtem Mikrofon und bewusst flüssigem Sprechen kam der Redefluss deshalb auf 4–12 % (längste Pause 6–19 s), bei sehr gleichmäßiger Lautstärke sogar auf "keine Daten". Die Grenze "nahezu pausenloses Sprechen" (siehe oben) war kein Randfall, sondern der Normalfall; die Unit-Tests hatten sie als bekannte Einschränkung festgeschrieben, statt sie zu prüfen.
+
+**Neue Methode (test-first, `domain/redefluss.ts`):**
+- Rauschboden = 10. Perzentil, Sprechpegel = 90. Perzentil; die Schwelle liegt in der logarithmischen Mitte zwischen beiden.
+- Ist der Abstand zu klein (Sprechpegel/Rauschboden < 2,5), gilt die Aufnahme als *durchgehend gesprochen*; liegt schon der Sprechpegel unter einem Mindestpegel (0,008), gilt sie als *Stille* ("keine Daten").
+- Lücken unter 0,8 s zwischen sprechenden Frames zählen als Sprechen (Wort- und Atemlücken), erst längere als Pause.
+- Das Messfenster des Pegels wurde von 2048 auf 8192 Samples vergrößert (~170 ms statt 43 ms bei 200-ms-Raster), damit eine Wortlücke nicht zufällig die ganze Stichprobe bestimmt.
+- Das Debug-Overlay zeigt Pegel, Rauschboden, Sprechpegel, Schwelle und Status live zur Kalibrierung.
+Bestätigt im selben Test: flüssiges Sprechen 83–88 %, Stocken 58 %, 20 s Schweigen "keine Daten". Nicht bestätigt: der Mindestpegel passt zu anderen Mikrofonen; alle Konstanten bleiben eigene Einschätzungen.
+
+**Neue Grenze.** Eine konstant laute Umgebung ohne Sprechen (z. B. Lüfter) hat keinen Pegelabstand und wird als durchgehend gesprochen gewertet. Die Füllwort-Erkennung liefert in der Praxis zudem zu niedrige Raten: die Browser-Erkennung lässt "äh/ähm" oft weg.
+
+**Korrektur zur Transkript-Lebensdauer.** Oben steht, das Transkript verlasse `ergaenzeRedefluss()` nie. Genauer: Es liegt als `FragenErgebnis.transkript` im React-State, solange Interview und Auswertung offen sind, und wird ausschließlich von `ergaenzeRedefluss()` gelesen (aufgerufen aus `AuswertungScreen` und `aggregiereSession`). Es wird nicht persistiert, nicht geloggt und nicht ans Backend gesendet – das Backend hat dafür kein Feld.
+
