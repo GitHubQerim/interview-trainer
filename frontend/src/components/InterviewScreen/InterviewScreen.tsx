@@ -172,6 +172,9 @@ export function InterviewScreen({
       currentIndexRef.current += 1
       setCurrentIndex(currentIndexRef.current)
       setBereitRest(mitVideo ? bereitSekunden : 0)
+      // Synchron setzen: der Effekt, der den Ref sonst aktualisiert, laeuft erst nach dem
+      // Render - Frames dazwischen landeten sonst noch in der neuen Frage.
+      bereitRef.current = mitVideo && bereitSekunden > 0
       istImWechselRef.current = false
       setIstImWechsel(false)
     },
@@ -207,7 +210,8 @@ export function InterviewScreen({
   // nicht die Leertaste - die wuerde fokussierte Buttons und Checkboxen ausloesen.
   useEffect(() => {
     function beiTaste(event: KeyboardEvent) {
-      if (event.key !== 'ArrowRight') {
+      // Gehaltene Taste und Kombinationen (Alt+Pfeil = Browser zurueck) nicht abfangen.
+      if (event.key !== 'ArrowRight' || event.repeat || event.altKey || event.ctrlKey || event.metaKey) {
         return
       }
       const ziel = event.target

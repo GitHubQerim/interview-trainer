@@ -76,7 +76,9 @@ export interface VadAnalyse {
  * Stille (durchgehend gesprochen); liegt schon der Sprechpegel unter STILLE_PEGEL,
  * wurde gar nicht gesprochen.
  */
-export function analysiereVad(lautstaerken: number[]): VadAnalyse {
+export function analysiereVad(messwerte: number[]): VadAnalyse {
+  // Ungueltige Werte (NaN, Infinity) wuerden die Sortierung der Perzentile verfaelschen.
+  const lautstaerken = messwerte.filter(Number.isFinite)
   const rauschboden = Math.max(perzentil(lautstaerken, 0.1), RAUSCHBODEN_UNTERGRENZE)
   const sprechpegel = perzentil(lautstaerken, 0.9)
   const stille = sprechpegel < STILLE_PEGEL

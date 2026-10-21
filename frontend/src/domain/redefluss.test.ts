@@ -158,6 +158,16 @@ describe('analysiereVad', () => {
     expect(analyse.schwelle).toBeLessThan(0.1)
   })
 
+  it('ignoriert ungültige Messwerte (NaN) statt die Perzentile zu verfälschen', () => {
+    const werte = [...Array.from({ length: 10 }, () => 0.003), Number.NaN, ...Array.from({ length: 40 }, () => 0.1)]
+
+    const analyse = analysiereVad(werte)
+
+    expect(Number.isFinite(analyse.schwelle)).toBe(true)
+    expect(analyse.stille).toBe(false)
+    expect(analyse.durchgehend).toBe(false)
+  })
+
   it('meldet Stille, wenn selbst die lautesten Werte unter dem Mindestpegel liegen', () => {
     expect(analysiereVad(Array.from({ length: 30 }, () => 0.002)).stille).toBe(true)
   })

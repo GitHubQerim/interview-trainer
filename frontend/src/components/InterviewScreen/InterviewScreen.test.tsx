@@ -225,6 +225,18 @@ describe('InterviewScreen', () => {
       await waitFor(() => expect(screen.getByText('Frage zwei')).toBeInTheDocument())
     })
 
+    it('ignoriert gehaltene Pfeiltaste und Tastenkombinationen wie Alt+Pfeil (Browser zurück)', async () => {
+      render(<InterviewScreen config={videoTonConfig} onFinished={vi.fn()} />)
+      await waitFor(() => expect(screen.getByText('Frage eins')).toBeInTheDocument())
+
+      fireEvent.keyDown(window, { key: 'ArrowRight', repeat: true })
+      fireEvent.keyDown(window, { key: 'ArrowRight', altKey: true })
+      fireEvent.keyDown(window, { key: 'ArrowRight', metaKey: true })
+      fireEvent.keyDown(window, { key: 'ArrowRight', ctrlKey: true })
+
+      expect(screen.getByText(/Mach dich bereit/)).toBeInTheDocument()
+    })
+
     it('zeigt ohne Videoanalyse keine Bereit-Phase', async () => {
       const config: SessionConfig = { beruf: 'Softwareentwicklung', schwierigkeit: 'mittel', modus: 'nur-fragen' }
       render(<InterviewScreen config={config} onFinished={vi.fn()} />)
