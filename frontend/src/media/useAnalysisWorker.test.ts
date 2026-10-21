@@ -71,6 +71,28 @@ describe('useAnalysisWorker', () => {
     expect(result.current.status).not.toBe('permission-denied')
   })
 
+  it('fragt mit mitTon: false nur die Kamera an, nie das Mikrofon', async () => {
+    vi.stubGlobal(
+      'Worker',
+      class {
+        constructor() {
+          return new MockWorker()
+        }
+      },
+    )
+    const getUserMedia = vi.fn((_constraints?: MediaStreamConstraints) => Promise.resolve(fakeStream()))
+    vi.stubGlobal('navigator', { mediaDevices: { getUserMedia } })
+
+    const { result } = renderHook(() => useAnalysisWorker(undefined, { mitTon: false }))
+
+    await act(async () => {
+      await result.current.start()
+    })
+
+    expect(getUserMedia).toHaveBeenCalledTimes(1)
+    expect(getUserMedia).toHaveBeenCalledWith({ video: true })
+  })
+
   it('versucht bei verweigerter Berechtigung (NotAllowedError) keinen zweiten Anlauf', async () => {
     const getUserMedia = vi.fn(() => Promise.reject(new DOMException('verweigert', 'NotAllowedError')))
     vi.stubGlobal('navigator', { mediaDevices: { getUserMedia } })

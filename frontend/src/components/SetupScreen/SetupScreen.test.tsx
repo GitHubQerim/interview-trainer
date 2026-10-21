@@ -66,4 +66,24 @@ describe('SetupScreen', () => {
 
     expect(onStart).toHaveBeenCalledWith({ beruf: 'Softwareentwicklung', schwierigkeit: 'hart', modus: 'video-ton' })
   })
+
+  it('bietet die Kameravorschau nur im Modus Video und Ton an', async () => {
+    vi.spyOn(fragenkatalog, 'getFragen').mockResolvedValue([{ id: '1', text: 'Frage' }])
+
+    render(<SetupScreen onStart={vi.fn()} />)
+
+    expect(screen.getByRole('button', { name: 'Kamera einschalten' })).toBeEnabled()
+
+    fireEvent.click(screen.getByRole('button', { name: /Nur Ton/ }))
+
+    expect(screen.getByRole('button', { name: 'Kamera einschalten' })).toBeDisabled()
+  })
+
+  it('weist darauf hin, dass die Kamera erst auf Klick startet', () => {
+    vi.spyOn(fragenkatalog, 'getFragen').mockResolvedValue([{ id: '1', text: 'Frage' }])
+
+    render(<SetupScreen onStart={vi.fn()} />)
+
+    expect(screen.getByText(/Kamera ist aus, bis Sie die Vorschau einschalten/)).toBeInTheDocument()
+  })
 })

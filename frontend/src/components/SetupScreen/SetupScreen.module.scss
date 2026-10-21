@@ -12,13 +12,17 @@
 }
 
 .columns {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  // Einstellungen schmal, Kameravorschau bekommt den Rest der Breite
+  grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
   gap: $space-4;
+
+  @media (max-width: 800px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .card {
-  flex: 1 1 280px;
   display: flex;
   flex-direction: column;
   gap: $space-4;
@@ -109,18 +113,6 @@
   display: block;
   font-size: $font-size-sm;
   color: $color-text-muted;
-}
-
-.videoPlaceholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 160px;
-  background: $color-video-bg;
-  border-radius: $radius-sm;
-  color: $color-text-muted;
-  text-align: center;
-  padding: $space-4;
 }
 
 .caption {

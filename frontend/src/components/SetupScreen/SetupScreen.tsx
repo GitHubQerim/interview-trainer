@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getFragen, type Schwierigkeit } from '../../domain/fragenkatalog'
 import { MODUS_OPTIONEN, type Modus, type SessionConfig } from '../../domain/session'
+import { KameraVorschau } from '../KameraVorschau/KameraVorschau'
 import styles from './SetupScreen.module.scss'
 
 const BERUF_VORSCHLAEGE = ['Softwareentwicklung', 'Vertrieb', 'Pflege', 'Projektmanagement']
@@ -105,7 +106,7 @@ export function SetupScreen({ onStart }: SetupScreenProps) {
         </div>
 
         <div className={styles.card}>
-          <div className={styles.videoPlaceholder}>Kameravorschau</div>
+          <KameraVorschau deaktiviert={modus !== 'video-ton'} />
           <p className={styles.caption}>Kopf und Schultern im Rahmen halten.</p>
           <p className={styles.fragenStatus}>
             {fragenAnzahl === null
@@ -126,8 +127,8 @@ export function SetupScreen({ onStart }: SetupScreenProps) {
       </div>
 
       <p className={styles.privacyNote}>
-        Kamera und Mikrofon sind aus, bis Sie die Session starten. Der Verlauf wird nur gespeichert, wenn Sie ihn
-        aktivieren, und ist jederzeit löschbar.
+        Die Kamera ist aus, bis Sie die Vorschau einschalten oder die Session starten, das Mikrofon erst mit dem
+        Interview. Der Verlauf wird nur gespeichert, wenn Sie ihn aktivieren, und ist jederzeit löschbar.
       </p>
     </div>
   )
