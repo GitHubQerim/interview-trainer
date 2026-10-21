@@ -7,8 +7,14 @@
 }
 
 .buehne {
+  // Breite ergibt sich aus der erlaubten Hoehe (Anteil der Fensterhoehe) und dem
+  // echten Kameraformat; so schiebt die Vorschau auf flachen Displays (13" Laptop)
+  // weder Hinweise noch Start-Button aus dem Bild und das Bild wird nie beschnitten.
+  --max-hoehe: clamp(180px, 42vh, 560px);
   position: relative;
-  width: 100%;
+  aspect-ratio: var(--ratio);
+  width: min(100%, calc(var(--max-hoehe) * var(--ratio)));
+  margin-inline: auto;
   background: $color-video-bg;
   border-radius: $radius-sm;
   overflow: hidden;
@@ -92,7 +98,7 @@
 
 .hinweise {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: $space-2;
   margin: 0;
   padding: 0;

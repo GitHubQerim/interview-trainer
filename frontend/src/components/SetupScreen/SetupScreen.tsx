@@ -108,21 +108,23 @@ export function SetupScreen({ onStart }: SetupScreenProps) {
         <div className={styles.card}>
           <KameraVorschau deaktiviert={modus !== 'video-ton'} />
           <p className={styles.caption}>Kopf und Schultern im Rahmen halten.</p>
-          <p className={styles.fragenStatus}>
-            {fragenAnzahl === null
-              ? 'Prüfe verfügbare Fragen...'
-              : keineFragenVerfuegbar
-                ? 'Keine Fragen für diese Auswahl verfügbar.'
-                : `${fragenAnzahl} Fragen verfügbar.`}
-          </p>
-          <button
-            type="button"
-            className={styles.startButton}
-            disabled={keineFragenVerfuegbar}
-            onClick={() => onStart({ beruf, schwierigkeit, modus })}
-          >
-            Interview starten
-          </button>
+          <div className={styles.startBereich}>
+            <p className={styles.fragenStatus}>
+              {fragenAnzahl === null
+                ? 'Prüfe verfügbare Fragen...'
+                : keineFragenVerfuegbar
+                  ? 'Keine Fragen für diese Auswahl verfügbar.'
+                  : `${fragenAnzahl} Fragen verfügbar.`}
+            </p>
+            <button
+              type="button"
+              className={styles.startButton}
+              disabled={keineFragenVerfuegbar}
+              onClick={() => onStart({ beruf, schwierigkeit, modus })}
+            >
+              Interview starten
+            </button>
+          </div>
         </div>
       </div>
 

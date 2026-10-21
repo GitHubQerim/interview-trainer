@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
 import { getFragen, type Frage } from '../../domain/fragenkatalog'
 import type { AudioFrameErgebnis, FragenErgebnis } from '../../domain/interview'
 import type { SessionConfig } from '../../domain/session'
@@ -40,6 +40,7 @@ export function InterviewScreen({
   const istImWechselRef = useRef(false)
 
   // Debug-Overlay (Branch debug/live-overlay, vermutlich wieder entfernt).
+  const [videoVerhaeltnis, setVideoVerhaeltnis] = useState(16 / 9)
   const [debugModus, setDebugModus] = useState(false)
   const [letztesErgebnis, setLetztesErgebnis] = useState<AnalysisResultPayload | null>(null)
   const [liveAuswertung, setLiveAuswertung] = useState<Auswertung | null>(null)
@@ -191,8 +192,19 @@ export function InterviewScreen({
         <p className={styles.frageText}>{aktuelleFrage.text}</p>
 
         {config.modus === 'video-ton' && (
-          <div className={styles.videoBox} style={{ position: 'relative' }}>
-            <video ref={videoRef} className={styles.video} muted playsInline />
+          <div className={styles.videoBox} style={{ '--ratio': videoVerhaeltnis } as CSSProperties}>
+            <video
+              ref={videoRef}
+              className={styles.video}
+              muted
+              playsInline
+              onLoadedMetadata={(event) => {
+                const { videoWidth, videoHeight } = event.currentTarget
+                if (videoWidth > 0 && videoHeight > 0) {
+                  setVideoVerhaeltnis(videoWidth / videoHeight)
+                }
+              }}
+            />
             {debugModus && (
               <DebugOverlay
                 videoElement={videoRef.current}

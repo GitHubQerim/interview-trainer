@@ -6,6 +6,10 @@
   gap: $space-4;
 }
 
+.wrapper h1 {
+  margin: 0;
+}
+
 .description {
   color: $color-text-muted;
   margin: 0;
@@ -16,6 +20,7 @@
   // Einstellungen schmal, Kameravorschau bekommt den Rest der Breite
   grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
   gap: $space-4;
+  align-items: start;
 
   @media (max-width: 800px) {
     grid-template-columns: minmax(0, 1fr);
@@ -120,7 +125,22 @@
   color: $color-text-muted;
 }
 
+.startBereich {
+  // Bleibt am unteren Fensterrand sichtbar, auch wenn Vorschau und Hinweise die Karte
+  // hoeher als das Fenster machen (13"-Laptop): der Start-Button ist nie "weggescrollt".
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  margin-top: auto;
+  padding: $space-3 0;
+  background: $color-surface;
+}
+
 .fragenStatus {
+  margin: 0;
   font-size: $font-size-sm;
 }
 

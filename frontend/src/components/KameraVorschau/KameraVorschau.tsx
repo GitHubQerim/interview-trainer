@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { bewerteKameraSetup, type HinweisStatus } from '../../domain/kameraSetup'
 import { useAnalysisWorker, type AnalysisResultPayload } from '../../media/useAnalysisWorker'
 import styles from './KameraVorschau.module.scss'
 import { zeichneOverlay } from './zeichneOverlay'
 
 const SPIEGELN_SCHLUESSEL = 'interview-trainer.vorschau-spiegeln'
-const STANDARD_SEITENVERHAELTNIS = '16 / 9'
+const STANDARD_SEITENVERHAELTNIS = 16 / 9
 
 const STATUS_LABEL: Record<HinweisStatus, string> = {
   ok: 'OK',
@@ -105,7 +105,7 @@ export function KameraVorschau({ deaktiviert }: KameraVorschauProps) {
         className={styles.buehne}
         data-testid="vorschau-buehne"
         data-gespiegelt={spiegeln}
-        style={{ aspectRatio: seitenverhaeltnis }}
+        style={{ '--ratio': seitenverhaeltnis } as CSSProperties}
       >
         <div className={spiegeln ? `${styles.medien} ${styles.gespiegelt}` : styles.medien}>
           <video
@@ -117,7 +117,7 @@ export function KameraVorschau({ deaktiviert }: KameraVorschauProps) {
             onLoadedMetadata={(event) => {
               const { videoWidth, videoHeight } = event.currentTarget
               if (videoWidth > 0 && videoHeight > 0) {
-                setSeitenverhaeltnis(`${videoWidth} / ${videoHeight}`)
+                setSeitenverhaeltnis(videoWidth / videoHeight)
               }
             }}
           />
