@@ -93,4 +93,12 @@ describe('useRedeflussVad', () => {
 
     expect(audioContextInstanzen[0]?.close).toHaveBeenCalled()
   })
+
+  it('misst ueber ein Fenster, das fast das ganze Abtastintervall abdeckt', () => {
+    renderHook(() => useRedeflussVad(fakeStreamMitAudio(), vi.fn()))
+
+    // Eine Momentaufnahme von 2048 Samples (~43 ms) trifft bei 200-ms-Intervall oft
+    // genau eine Wortluecke; 8192 Samples (~170 ms bei 48 kHz) mitteln das heraus.
+    expect(audioContextInstanzen[0]?.analyser.fftSize).toBeGreaterThanOrEqual(8192)
+  })
 })

@@ -1,16 +1,27 @@
 import type { AudioFrameErgebnis } from './interview'
 import type { Auswertung } from './score'
 
-// Herkunft: eigene Einschaetzung, nicht empirisch validiert - wie die anderen
-// Schwellwerte im Projekt. Verhindert, dass eine sehr leise Aufnahme einen
-// Perzentil-Wert nahe Null liefert, der schon kleinstes Quantisierungsrauschen
-// als "sprechend" zaehlen wuerde. Deckt NICHT den umgekehrten Fall ab (nahezu
-// pausenloses Sprechen, bei dem schon das Perzentil selbst auf Sprachpegel liegt) -
-// siehe ADR-0008, bekannte Grenze.
-const RAUSCHBODEN_MINIMUM = 0.01
+// Herkunft: eigene Einschaetzung, nicht empirisch validiert. RMS-Pegel (0..1), unter
+// dem selbst die lautesten 10 % der Aufnahme nur Raumrauschen sind. Anlass zur
+// Aenderung: Testaufnahmen zeigen, dass normales Sprechen mit dem eigenen Mikrofon
+// darunter liegt (dann wird Sprechen faelschlich als Stille verworfen).
+const STILLE_PEGEL = 0.008
 
-// Herkunft: eigene Einschaetzung, nicht empirisch validiert.
-const VAD_SCHWELLE_FAKTOR = 3
+// Herkunft: eigene Einschaetzung, nicht empirisch validiert. Verhaeltnis zwischen
+// lautem (90. Perzentil) und leisem (10. Perzentil) Pegel, ab dem die Aufnahme echte
+// Stille enthaelt. Darunter gilt sie als durchgehend gesprochen: dann gibt es keinen
+// Rauschboden, den man schaetzen koennte - frueher lag die Schwelle hier ueber dem
+// Sprechpegel und ein fluessiger Vortrag kam auf 4-12 % Redefluss (Test 21.10.2026).
+const MINDEST_PEGELABSTAND = 2.5
+
+// Herkunft: eigene Einschaetzung, nicht empirisch validiert. Kuerzere Luecken
+// zwischen sprechenden Frames (Wort-/Atemluecken) zaehlen als Sprechen, erst laengere
+// als Pause - die Messung ist ohnehin nur ein 200-ms-Raster.
+const MINDEST_PAUSE_SEKUNDEN = 0.8
+
+// Untergrenze fuer das Verhaeltnis-Mass, damit ein exakt stiller Frame (0) keine
+// Division durch null ausloest.
+const RAUSCHBODEN_UNTERGRENZE = 0.001
 
 // Herkunft: eigene Einschaetzung, nicht empirisch validiert. Verhindert absurde
 // Fuellwort-Raten aus wenigen Sekunden Sprechzeit (z.B. 1 Fuellwort in 2 Sekunden
@@ -49,6 +60,56 @@ function perzentil(werte: number[], p: number): number {
 
 const UNAUSWERTBAR: RedeflussErgebnis = { redeflussProzent: null, laengstePauseSekunden: null, sprechzeitSekunden: null }
 
+export interface VadAnalyse {
+  rauschboden: number
+  sprechpegel: number
+  // Schwelle, ab der ein Frame als sprechend zaehlt; bei stille/durchgehend ohne Bedeutung.
+  schwelle: number
+  stille: boolean
+  durchgehend: boolean
+}
+
+/**
+ * Schaetzt aus der Pegelverteilung der Aufnahme, was Stille und was Sprechen ist.
+ * Rauschboden = 10. Perzentil, Sprechpegel = 90. Perzentil; die Schwelle liegt in der
+ * logarithmischen Mitte dazwischen. Ist der Abstand zu klein, gibt es keine erkennbare
+ * Stille (durchgehend gesprochen); liegt schon der Sprechpegel unter STILLE_PEGEL,
+ * wurde gar nicht gesprochen.
+ */
+export function analysiereVad(lautstaerken: number[]): VadAnalyse {
+  const rauschboden = Math.max(perzentil(lautstaerken, 0.1), RAUSCHBODEN_UNTERGRENZE)
+  const sprechpegel = perzentil(lautstaerken, 0.9)
+  const stille = sprechpegel < STILLE_PEGEL
+  const durchgehend = !stille && sprechpegel / rauschboden < MINDEST_PEGELABSTAND
+
+  return { rauschboden, sprechpegel, schwelle: Math.sqrt(rauschboden * Math.max(sprechpegel, rauschboden)), stille, durchgehend }
+}
+
+// Luecken zwischen sprechenden Frames unter MINDEST_PAUSE_SEKUNDEN zaehlen als Sprechen.
+function fuelleKurzeLuecken(frames: AudioFrameErgebnis[], sprechend: boolean[]): boolean[] {
+  const ergebnis = [...sprechend]
+  let letzterSprechenderIndex = -1
+
+  for (let i = 0; i < frames.length; i += 1) {
+    if (!sprechend[i]) {
+      continue
+    }
+
+    if (letzterSprechenderIndex !== -1 && i - letzterSprechenderIndex > 1) {
+      const ersterStillerFrame = frames[letzterSprechenderIndex + 1]!
+      const luecke = (frames[i]!.zeitstempel - ersterStillerFrame.zeitstempel) / 1000
+      if (luecke < MINDEST_PAUSE_SEKUNDEN) {
+        for (let j = letzterSprechenderIndex + 1; j < i; j += 1) {
+          ergebnis[j] = true
+        }
+      }
+    }
+    letzterSprechenderIndex = i
+  }
+
+  return ergebnis
+}
+
 /**
  * Sprechanteil + laengste Pause, ausschliesslich innerhalb des Bereichs vom ersten
  * bis zum letzten als "sprechend" erkannten Frame - Stille vor dem ersten und nach
@@ -61,21 +122,19 @@ export function berechneRedefluss(frames: AudioFrameErgebnis[]): RedeflussErgebn
     return UNAUSWERTBAR
   }
 
-  const lautstaerken = frames.map((frame) => frame.lautstaerke)
-  const rauschboden = Math.max(perzentil(lautstaerken, 0.1), RAUSCHBODEN_MINIMUM)
-  const schwelle = rauschboden * VAD_SCHWELLE_FAKTOR
-  const istSprechend = (frame: AudioFrameErgebnis) => frame.lautstaerke > schwelle
-
-  const sprechendIndizes = frames
-    .map((frame, index) => (istSprechend(frame) ? index : -1))
-    .filter((index) => index !== -1)
-
-  if (sprechendIndizes.length === 0) {
+  const vad = analysiereVad(frames.map((frame) => frame.lautstaerke))
+  if (vad.stille) {
     return UNAUSWERTBAR
   }
 
-  const start = sprechendIndizes[0]!
-  const ende = sprechendIndizes[sprechendIndizes.length - 1]!
+  const rohSprechend = frames.map((frame) => vad.durchgehend || frame.lautstaerke > vad.schwelle)
+  const sprechend = fuelleKurzeLuecken(frames, rohSprechend)
+
+  const start = sprechend.indexOf(true)
+  const ende = sprechend.lastIndexOf(true)
+  if (start === -1) {
+    return UNAUSWERTBAR
+  }
 
   let sprechzeitSekunden = 0
   let gesamtSekunden = 0
@@ -91,7 +150,7 @@ export function berechneRedefluss(frames: AudioFrameErgebnis[]): RedeflussErgebn
     }
 
     gesamtSekunden += dt
-    if (istSprechend(aktuell)) {
+    if (sprechend[i]) {
       sprechzeitSekunden += dt
       aktuellePauseSekunden = 0
     } else {

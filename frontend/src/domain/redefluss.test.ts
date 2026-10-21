@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { AudioFrameErgebnis } from './interview'
 import type { Auswertung } from './score'
-import { berechneRedefluss, ergaenzeRedefluss, zaehleFuellwoerter } from './redefluss'
+import { analysiereVad, berechneRedefluss, ergaenzeRedefluss, zaehleFuellwoerter } from './redefluss'
 
 function frame(zeitstempel: number, lautstaerke: number): AudioFrameErgebnis {
   return { zeitstempel, lautstaerke }
@@ -74,6 +74,99 @@ describe('berechneRedefluss', () => {
     // Vorlesezeit (die wurde bereits herausgeschnitten).
     expect(ergebnis.laengstePauseSekunden).toBeCloseTo(1, 1)
     expect(ergebnis.redeflussProzent).toBeLessThan(100)
+  })
+})
+
+describe('berechneRedefluss ohne klare Stille in der Aufnahme', () => {
+  // Realer Normalfall: wer die ganze Antwort ueber spricht, hat kein stilles
+  // Zehntel, aus dem sich ein Rauschboden schaetzen liesse. Vorher lag das
+  // 10.-Perzentil dann auf Sprechpegel, die Schwelle (3x) darueber, und der Redefluss
+  // kam bei fluessigem Sprechen auf 4-12 % oder "keine Daten" (Test 21.10.2026).
+  const SPRECHPEGEL_SCHWANKEND = [0.02, 0.08, 0.12, 0.05, 0.1, 0.03, 0.09, 0.06]
+
+  function schwankend(anzahl: number, start = 0) {
+    return Array.from({ length: anzahl }, (_, i) =>
+      frame(start + i * 200, SPRECHPEGEL_SCHWANKEND[i % SPRECHPEGEL_SCHWANKEND.length] ?? 0.05),
+    )
+  }
+
+  it('wertet gleichmaessiges Sprechen ohne Pausen als nahezu 100 % Redefluss', () => {
+    const frames = Array.from({ length: 100 }, (_, i) => frame(i * 200, 0.06 + (i % 3) * 0.01))
+
+    const ergebnis = berechneRedefluss(frames)
+
+    expect(ergebnis.redeflussProzent).toBeCloseTo(100)
+    expect(ergebnis.laengstePauseSekunden).toBe(0)
+  })
+
+  it('wertet Sprechen mit schwankender Lautstaerke als zusammenhaengend, solange Luecken kurz sind', () => {
+    const ergebnis = berechneRedefluss(schwankend(100))
+
+    expect(ergebnis.redeflussProzent).toBeGreaterThan(90)
+    expect(ergebnis.laengstePauseSekunden).toBeLessThan(0.8)
+  })
+
+  it('zaehlt kurze Atem- und Wortluecken (unter 0,8 s) nicht als Pause', () => {
+    // 2s Stille vorab (Rauschboden), dann Sprechen mit je einer 200ms-Luecke.
+    const stille = Array.from({ length: 10 }, (_, i) => frame(i * 200, 0.003))
+    const sprechen = Array.from({ length: 50 }, (_, i) => frame(2000 + i * 200, i % 5 === 4 ? 0.003 : 0.1))
+
+    const ergebnis = berechneRedefluss([...stille, ...sprechen])
+
+    expect(ergebnis.laengstePauseSekunden).toBe(0)
+    expect(ergebnis.redeflussProzent).toBeCloseTo(100)
+  })
+
+  it('erkennt eine echte Pause von etwa 4 s mitten in schwankendem Sprechen', () => {
+    // 5s Sprechen, 4s Pause (Raum-Grundpegel), 5s Sprechen.
+    const vorher = schwankend(25)
+    const pause = Array.from({ length: 20 }, (_, i) => frame(5000 + i * 200, 0.003))
+    const nachher = schwankend(25, 9000)
+
+    const ergebnis = berechneRedefluss([...vorher, ...pause, ...nachher])
+
+    expect(ergebnis.laengstePauseSekunden).toBeCloseTo(4, 0)
+    expect(ergebnis.redeflussProzent).toBeGreaterThan(50)
+    expect(ergebnis.redeflussProzent).toBeLessThan(75)
+  })
+
+  it('erkennt auch leises Sprechen ueber einem konstanten Raumpegel', () => {
+    const raum = Array.from({ length: 10 }, (_, i) => frame(i * 200, 0.003))
+    const leise = Array.from({ length: 40 }, (_, i) => frame(2000 + i * 200, i % 2 === 0 ? 0.02 : 0.03))
+
+    const ergebnis = berechneRedefluss([...raum, ...leise])
+
+    expect(ergebnis.redeflussProzent).toBeCloseTo(100)
+  })
+
+  it('liefert null bei durchgehend leisem Raumrauschen', () => {
+    const frames = Array.from({ length: 50 }, (_, i) => frame(i * 200, 0.003 + (i % 2) * 0.001))
+
+    expect(berechneRedefluss(frames).redeflussProzent).toBeNull()
+  })
+})
+
+describe('analysiereVad', () => {
+  it('liefert Pegel, Rauschboden und Schwelle fuer die Anzeige im Debug-Overlay', () => {
+    const werte = [...Array.from({ length: 10 }, () => 0.003), ...Array.from({ length: 40 }, () => 0.1)]
+
+    const analyse = analysiereVad(werte)
+
+    expect(analyse.stille).toBe(false)
+    expect(analyse.durchgehend).toBe(false)
+    expect(analyse.schwelle).toBeGreaterThan(0.003)
+    expect(analyse.schwelle).toBeLessThan(0.1)
+  })
+
+  it('meldet Stille, wenn selbst die lautesten Werte unter dem Mindestpegel liegen', () => {
+    expect(analysiereVad(Array.from({ length: 30 }, () => 0.002)).stille).toBe(true)
+  })
+
+  it('meldet durchgehendes Sprechen, wenn kein Pegelabstand erkennbar ist', () => {
+    const analyse = analysiereVad(Array.from({ length: 30 }, (_, i) => 0.08 + (i % 2) * 0.01))
+
+    expect(analyse.stille).toBe(false)
+    expect(analyse.durchgehend).toBe(true)
   })
 })
 

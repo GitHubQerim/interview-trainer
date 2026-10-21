@@ -29,7 +29,9 @@ export function useRedeflussVad(stream: MediaStream | null, onAudioFrame?: (fram
       audioContext = new AudioContext()
       const source = audioContext.createMediaStreamSource(stream)
       const analyser = audioContext.createAnalyser()
-      analyser.fftSize = 2048
+      // 8192 Samples (~170 ms bei 48 kHz): fast das ganze 200-ms-Intervall statt einer
+      // 43-ms-Momentaufnahme, die oft genau in eine Wortluecke faellt.
+      analyser.fftSize = 8192
       source.connect(analyser)
 
       const buffer = new Uint8Array(analyser.fftSize)
