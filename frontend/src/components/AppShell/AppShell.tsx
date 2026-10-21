@@ -25,6 +25,9 @@ export function AppShell() {
 
   function handleStart(config: SessionConfig) {
     setSessionConfig(config)
+    // Ergebnisse der vorigen Session verwerfen: sonst gehoeren Beruf/Schwierigkeit der neuen
+    // Session zu den Ergebnissen der alten (z.B. im Prompt des KI-Exports).
+    setErgebnisse(null)
     setActiveTab('interview')
   }
 
@@ -66,6 +69,8 @@ export function AppShell() {
         {activeTab === 'auswertung' && ergebnisse && (
           <AuswertungScreen
             ergebnisse={ergebnisse}
+            beruf={sessionConfig?.beruf}
+            schwierigkeit={sessionConfig?.schwierigkeit}
             onNochmalUeben={() => setActiveTab('setup')}
             onVerlaufAnsehen={() => setActiveTab('verlauf')}
           />

@@ -97,8 +97,8 @@ describe('AuswertungScreen', () => {
       />,
     )
 
-    expect(screen.getByText(/Orientierungswerte/)).toBeInTheDocument()
-    expect(screen.getByText(/keine Bewertung/)).toBeInTheDocument()
+    expect(screen.getByText(/Die Zielbereiche sind Orientierungswerte/)).toBeInTheDocument()
+    expect(screen.getByText(/Trainingshilfe und keine Bewertung/)).toBeInTheDocument()
   })
 
   it('kennzeichnet die gewählte Frage im Tab mit aria-pressed', () => {
@@ -108,5 +108,21 @@ describe('AuswertungScreen', () => {
 
     expect(screen.getByRole('button', { name: 'Frage 1' })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: 'Frage 2' })).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  it('bietet die Auswertung mit eigener KI als eingeklapptes, optionales Panel an', () => {
+    render(
+      <AuswertungScreen
+        ergebnisse={[auswertbareErgebnisse('1', 'Erste Frage')]}
+        beruf="Vertrieb"
+        schwierigkeit="mittel"
+        onNochmalUeben={vi.fn()}
+        onVerlaufAnsehen={vi.fn()}
+      />,
+    )
+
+    const panel = screen.getByText(/Mit eigener KI auswerten/).closest('details')
+    expect(panel).not.toHaveAttribute('open')
+    expect(screen.getByTestId('ki-vorschau')).toHaveTextContent('Vertrieb')
   })
 })

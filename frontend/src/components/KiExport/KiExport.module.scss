@@ -1,0 +1,209 @@
+@use '../../styles/tokens' as *;
+@use '../../styles/controls' as *;
+
+.panel {
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+}
+
+.summary {
+  padding: $space-4 $space-6;
+  font-weight: 600;
+  cursor: pointer;
+
+  @include fokus;
+}
+
+.inhalt {
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+  padding: 0 $space-6 $space-6;
+}
+
+.erklaerung {
+  margin: 0;
+  padding: $space-3 $space-4;
+  background: $color-accent-bg;
+  border-radius: $radius-sm;
+  font-size: $font-size-sm;
+}
+
+.abschnitt {
+  margin: $space-3 0 0;
+  font-size: $font-size-base;
+}
+
+.optionen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-2 $space-6;
+  font-size: $font-size-sm;
+
+  label {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-2;
+  }
+}
+
+.begriffe {
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+  font-size: $font-size-sm;
+
+  input {
+    padding: $space-2 $space-3;
+    border: 1px solid $color-border;
+    border-radius: $radius-sm;
+    font: inherit;
+  }
+}
+
+.hinweis {
+  margin: 0;
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+}
+
+.warnung {
+  margin: 0;
+  padding: $space-3 $space-4;
+  border: 1px solid $color-warn;
+  border-radius: $radius-sm;
+  font-size: $font-size-sm;
+}
+
+.fehler {
+  margin: 0;
+  font-size: $font-size-sm;
+  color: $color-warn;
+}
+
+.vorschauTitel {
+  margin: 0;
+  font-size: $font-size-sm;
+  font-weight: 600;
+}
+
+.zaehler {
+  font-weight: 400;
+  color: $color-text-muted;
+}
+
+.vorschau {
+  max-height: 320px;
+  margin: 0;
+  padding: $space-3 $space-4;
+  overflow: auto;
+  background: $color-bg;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.treffer {
+  background: #f6e7d8;
+  color: $color-warn;
+  border-radius: 3px;
+}
+
+.bestaetigung {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  font-size: $font-size-sm;
+}
+
+.aktionen {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+}
+
+.kopierButton {
+  @include button-primaer;
+}
+
+.status {
+  font-size: $font-size-sm;
+  color: $color-accent;
+}
+
+.antwortLabel {
+  font-size: $font-size-sm;
+  font-weight: 600;
+}
+
+.antwort {
+  width: 100%;
+  padding: $space-3;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  font: inherit;
+  font-size: $font-size-sm;
+  resize: vertical;
+}
+
+.feedback {
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+}
+
+.feedbackHinweis {
+  margin: 0;
+  padding: $space-2 $space-3;
+  background: #f6e7d8;
+  border-radius: $radius-sm;
+  font-size: $font-size-sm;
+  color: $color-warn;
+}
+
+.feedbackFrage {
+  padding: $space-4;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+
+  ul {
+    margin: 0;
+    padding-left: $space-4;
+  }
+}
+
+.feedbackTitel {
+  margin: 0 0 $space-1;
+  font-size: $font-size-base;
+}
+
+.feedbackFragetext {
+  margin: 0 0 $space-2;
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+}
+
+.feedbackUnterTitel {
+  margin: $space-2 0 $space-1;
+  font-size: $font-size-sm;
+  color: $color-accent;
+}
+
+.statt {
+  color: $color-text-muted;
+  text-decoration: line-through;
+}
+
+.besser {
+  color: $color-accent;
+  font-weight: 600;
+}
+
+.gesamteindruck {
+  margin: $space-3 0 0;
+  font-size: $font-size-sm;
+}

@@ -89,4 +89,25 @@ describe('AppShell', () => {
       expect(screen.getByRole('heading', { name: 'Auswertung' })).toBeInTheDocument()
     })
   })
+
+  it('zeigt nach dem Start einer neuen Session nicht die Ergebnisse der alten an', async () => {
+    render(<AppShell />)
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Interview starten' })).toBeEnabled())
+    fireEvent.click(screen.getByRole('button', { name: 'Interview starten' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Sofort starten' })).toBeInTheDocument())
+    fireEvent.click(screen.getByRole('button', { name: 'Sofort starten' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Nächste Frage' })).toBeInTheDocument())
+    fireEvent.click(screen.getByRole('button', { name: 'Nächste Frage' }))
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Auswertung' })).toBeInTheDocument())
+
+    fireEvent.click(screen.getByRole('button', { name: 'Setup' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Interview starten' })).toBeEnabled())
+    fireEvent.click(screen.getByRole('button', { name: 'Interview starten' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Auswertung' }))
+
+    // Sonst bekaeme etwa das KI-Panel Beruf und Schwierigkeit der neuen Session zu den
+    // Ergebnissen der alten.
+    expect(screen.queryByRole('heading', { name: 'Auswertung' })).not.toBeInTheDocument()
+  })
 })

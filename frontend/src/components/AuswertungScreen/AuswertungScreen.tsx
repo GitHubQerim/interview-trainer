@@ -3,15 +3,24 @@ import type { FragenErgebnis } from '../../domain/interview'
 import { ergaenzeRedefluss } from '../../domain/redefluss'
 import { berechneAuswertung } from '../../domain/score'
 import { FrageAuswertung } from '../FrageAuswertung/FrageAuswertung'
+import { KiExportPanel } from '../KiExport/KiExportPanel'
 import styles from './AuswertungScreen.module.scss'
 
 interface AuswertungScreenProps {
   ergebnisse: FragenErgebnis[]
+  beruf?: string
+  schwierigkeit?: string
   onNochmalUeben: () => void
   onVerlaufAnsehen: () => void
 }
 
-export function AuswertungScreen({ ergebnisse, onNochmalUeben, onVerlaufAnsehen }: AuswertungScreenProps) {
+export function AuswertungScreen({
+  ergebnisse,
+  beruf,
+  schwierigkeit,
+  onNochmalUeben,
+  onVerlaufAnsehen,
+}: AuswertungScreenProps) {
   const [ausgewaehlterIndex, setAusgewaehlterIndex] = useState(0)
 
   const ausgewaehlteFrage = ergebnisse[ausgewaehlterIndex]
@@ -55,6 +64,8 @@ export function AuswertungScreen({ ergebnisse, onNochmalUeben, onVerlaufAnsehen 
       </div>
 
       <FrageAuswertung frageText={ausgewaehlteFrage.frage.text} auswertung={auswertung} />
+
+      <KiExportPanel ergebnisse={ergebnisse} beruf={beruf} schwierigkeit={schwierigkeit} />
 
       <div className={styles.buttons}>
         <button type="button" className={styles.buttonPrimary} onClick={onNochmalUeben}>
