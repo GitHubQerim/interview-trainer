@@ -65,7 +65,8 @@ export function VerlaufScreen({ onZurueck }: VerlaufScreenProps) {
               <button
                 key={session.id}
                 type="button"
-                className={index === ausgewaehlterSessionIndex ? `${styles.tab} ${styles.tabActive}` : styles.tab}
+                aria-pressed={index === ausgewaehlterSessionIndex}
+                className={styles.tab}
                 onClick={() => handleSessionWechsel(index)}
               >
                 Session {index + 1}
@@ -85,9 +86,8 @@ export function VerlaufScreen({ onZurueck }: VerlaufScreenProps) {
                   <button
                     key={eintrag.frageId}
                     type="button"
-                    className={
-                      index === ausgewaehlterFrageIndex ? `${styles.tab} ${styles.tabActive}` : styles.tab
-                    }
+                    aria-pressed={index === ausgewaehlterFrageIndex}
+                    className={styles.tab}
                     onClick={() => setAusgewaehlterFrageIndex(index)}
                   >
                     Frage {index + 1}
@@ -102,7 +102,7 @@ export function VerlaufScreen({ onZurueck }: VerlaufScreenProps) {
       )}
 
       <div className={styles.buttons}>
-        <button type="button" className={`${styles.button} ${styles.buttonSecondary}`} onClick={onZurueck}>
+        <button type="button" className={styles.buttonSecondary} onClick={onZurueck}>
           Zurück
         </button>
       </div>

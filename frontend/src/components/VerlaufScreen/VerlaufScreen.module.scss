@@ -1,4 +1,5 @@
 @use '../../styles/tokens' as *;
+@use '../../styles/controls' as *;
 
 .wrapper {
   display: flex;
@@ -13,18 +14,7 @@
 }
 
 .tab {
-  padding: $space-2 $space-4;
-  border: 1px solid $color-border;
-  border-radius: $radius-pill;
-  background: $color-surface;
-  color: $color-text;
-  cursor: pointer;
-}
-
-.tabActive {
-  background: $color-text;
-  color: $color-surface;
-  border-color: $color-text;
+  @include option-pill;
 }
 
 .sessionInfo {
@@ -38,17 +28,10 @@
 
 .buttons {
   display: flex;
+  flex-wrap: wrap;
   gap: $space-2;
 }
 
-.button {
-  padding: $space-2 $space-4;
-  border-radius: $radius-pill;
-  cursor: pointer;
-}
-
 .buttonSecondary {
-  border: 1px solid $color-border;
-  background: $color-surface;
-  color: $color-text;
+  @include button-sekundaer;
 }

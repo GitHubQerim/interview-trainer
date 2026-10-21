@@ -1,7 +1,12 @@
+import type { ReactNode } from 'react'
 import styles from './MetrikBalken.module.scss'
 
 interface MetrikBalkenProps {
   label: string
+  // Kurze Lesehilfe unter dem Titel, z.B. wenn ein hoeherer Wert etwas Unerwartetes bedeutet.
+  untertitel?: string
+  // Weitere Zeilen zur selben Kennzahl (Verlauf, Pause, Fuellwoerter), gehoeren in die Karte.
+  zusatz?: ReactNode
   wert: number
   einheit?: string
   anzeigeMin: number
@@ -20,6 +25,8 @@ function prozentAufSkala(wert: number, min: number, max: number): number {
 
 export function MetrikBalken({
   label,
+  untertitel,
+  zusatz,
   wert,
   einheit = '',
   anzeigeMin,
@@ -37,9 +44,12 @@ export function MetrikBalken({
   const statusText = imZielkorridor ? 'im Zielbereich' : 'außerhalb'
 
   return (
-    <div className={styles.wrapper}>
+    <div className={imZielkorridor ? styles.karte : `${styles.karte} ${styles.karteAusserhalb}`}>
       <div className={styles.kopfzeile}>
-        <span className={styles.label}>{label}</span>
+        <div className={styles.titel}>
+          <span className={styles.label}>{label}</span>
+          {untertitel && <span className={styles.untertitel}>{untertitel}</span>}
+        </div>
         <span className={imZielkorridor ? `${styles.wert} ${styles.wertImZielkorridor}` : `${styles.wert} ${styles.wertAusserhalb}`}>
           {wertText}
         </span>
@@ -71,7 +81,11 @@ export function MetrikBalken({
         </span>
       </div>
 
-      <span className={styles.status}>{statusText}</span>
+      <span className={imZielkorridor ? `${styles.status} ${styles.statusOk}` : `${styles.status} ${styles.statusAchtung}`}>
+        {statusText}
+      </span>
+
+      {zusatz}
 
       <details className={styles.details}>
         <summary>So wurde das gemessen</summary>

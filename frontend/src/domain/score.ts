@@ -20,7 +20,7 @@ export interface Auswertung {
 // zur Kamera schauen"), nicht empirisch validiert. Anlass zur Aenderung: eigene
 // Nutzertests zeigen eine andere sinnvolle Schwelle, oder eine Quelle mit konkreten
 // Werten fuer diese Zielgruppe wird gefunden.
-const KOPFAUSRICHTUNG_SCHWELLE = 0.7
+export const KOPFAUSRICHTUNG_SCHWELLE = 0.7
 // Nachtrag 2026-09-19 (manuelle Tests, 10 Antworten, 2 Sessions): normales, engagiertes
 // Antworten lag fast durchgehend bei 95-100%, der alte obere Deckel (80%) hat das
 // faelschlich als "ausserhalb" markiert. Untere Grenze auf 70% angehoben, weil
@@ -34,9 +34,12 @@ export const HALTUNG_ZIELKORRIDOR = { min: 0, max: 6 }
 // Herkunft: aus dem Klickdummy uebernommener Beispielwert, nicht empirisch validiert.
 // Nachtrag 2026-09-19 (manuelle Tests, 10 Antworten, 2 Sessions): Werte lagen durchgehend
 // bei 0,04-0,20, selbst bewusst unruhiges Verhalten kam nur auf 0,12 - der alte Korridor
-// war nie erreichbar. Vorlaeufig auf den tatsaechlich beobachteten Bereich angehoben,
-// keine kontrollierte Studie. Siehe ADR-0005-Nachtrag.
-export const BEWEGUNGSRUHE_ZIELKORRIDOR = { min: 0.03, max: 0.25 }
+// war nie erreichbar. Vorlaeufig auf den tatsaechlich beobachteten Bereich angehoben.
+// Nachtrag 2026-10-21: Der Wert ist die Schulterbewegung pro Sekunde (hoeher = unruhiger,
+// Beim Wippen verdoppelte er sich von 0,07 auf 0,14). Sehr ruhiges Sitzen (0,03 und
+// weniger) wurde als "ausserhalb" markiert, obwohl es im Gespraech kein Fehler ist - die
+// Untergrenze entfaellt, nur zu viel Bewegung zaehlt als ausserhalb. Siehe ADR-0005-Nachtrag.
+export const BEWEGUNGSRUHE_ZIELKORRIDOR = { min: 0, max: 0.25 }
 
 // Herkunft: eigene Einschaetzung, nicht empirisch validiert - Redefluss (Sprechanteil
 // innerhalb des bereits um Vorlese-/Bedenkzeit bereinigten Antwortbereichs) existiert
@@ -47,7 +50,7 @@ export const REDEFLUSS_ZIELKORRIDOR = { min: 60, max: 95 }
 // Antwort hinweg als "Veraenderung" statt Mess-Rauschen gilt - nicht empirisch
 // validiert. Anlass zur Aenderung: echte Nutzertests zeigen, dass 1 Grad zu
 // empfindlich oder zu grob ist.
-const HALTUNG_VERLAUF_STABIL_SCHWELLE = 1
+export const HALTUNG_VERLAUF_STABIL_SCHWELLE = 1
 
 // Herkunft: eigene Einschaetzung, ab wann eine Aufnahme zu lueckenhaft ist, um noch
 // verlaessliche Aussagen zuzulassen - nicht empirisch validiert. Anlass zur Aenderung:

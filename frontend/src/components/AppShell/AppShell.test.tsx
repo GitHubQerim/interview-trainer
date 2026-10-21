@@ -7,6 +7,7 @@ import { AppShell } from './AppShell'
 describe('AppShell', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
+    vi.spyOn(fragenkatalog, 'getBerufe').mockResolvedValue(['Softwareentwicklung'])
     vi.spyOn(fragenkatalog, 'getFragen').mockResolvedValue([{ id: '1', text: 'Frage' }])
     vi.spyOn(verlaufApi, 'speichereSession').mockResolvedValue(undefined)
     vi.spyOn(verlaufApi, 'ladeVerlauf').mockResolvedValue([])
@@ -71,6 +72,13 @@ describe('AppShell', () => {
       expect(screen.getByRole('button', { name: 'Interview starten' })).toBeEnabled()
     })
     fireEvent.click(screen.getByRole('button', { name: 'Interview starten' }))
+
+    // Ohne Kamera (jsdom) wird die Analyse nie bereit, die Bereit-Phase laeuft dann nicht
+    // von selbst ab - sie laesst sich aber immer per Button ueberspringen.
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Sofort starten' })).toBeInTheDocument()
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Sofort starten' }))
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Nächste Frage' })).toBeInTheDocument()

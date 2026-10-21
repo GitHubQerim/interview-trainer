@@ -9,9 +9,12 @@ const POSE_LINKE_SCHULTER = 11
 const POSE_RECHTE_SCHULTER = 12
 const FACE_NASENSPITZE = 1
 
-function farbeFuer(hinweise: SetupHinweis[], id: SetupHinweis['id']): string {
-  const status = hinweise.find((hinweis) => hinweis.id === id)?.status
-  return status === 'ok' ? FARBE_OK : status === 'achtung' ? FARBE_ACHTUNG : FARBE_NEUTRAL
+function farbeFuer(hinweise: SetupHinweis[], ...ids: SetupHinweis['id'][]): string {
+  const stati = hinweise.filter((hinweis) => ids.includes(hinweis.id)).map((hinweis) => hinweis.status)
+  if (stati.includes('achtung')) {
+    return FARBE_ACHTUNG
+  }
+  return stati.length > 0 && stati.every((status) => status === 'ok') ? FARBE_OK : FARBE_NEUTRAL
 }
 
 /**
@@ -44,7 +47,7 @@ export function zeichneOverlay(
     const minY = Math.min(...yWerte)
     const maxY = Math.max(...yWerte)
 
-    ctx.strokeStyle = farbeFuer(hinweise, 'kopf-im-bild')
+    ctx.strokeStyle = farbeFuer(hinweise, 'kopf-im-bild', 'kopf-zur-kamera')
     ctx.beginPath()
     ctx.ellipse((minX + maxX) / 2, (minY + maxY) / 2, (maxX - minX) / 2, (maxY - minY) / 2, 0, 0, Math.PI * 2)
     ctx.stroke()

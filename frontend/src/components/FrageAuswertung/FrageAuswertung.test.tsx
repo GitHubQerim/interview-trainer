@@ -22,7 +22,7 @@ describe('FrageAuswertung', () => {
     expect(screen.getByText('Erste Frage')).toBeInTheDocument()
     expect(screen.getByText('Kopfausrichtung (%)')).toBeInTheDocument()
     expect(screen.getByText('Aufrechte Haltung (°)')).toBeInTheDocument()
-    expect(screen.getByText('Bewegungsruhe')).toBeInTheDocument()
+    expect(screen.getByText('Bewegung')).toBeInTheDocument()
     expect(screen.getByText('Redefluss (%)')).toBeInTheDocument()
     expect(screen.getByText(/Verlauf über die Antwort/)).toBeInTheDocument()
     expect(screen.getByText(/Längste Pause in der Antwort: 1.5s/)).toBeInTheDocument()
@@ -77,6 +77,56 @@ describe('FrageAuswertung', () => {
   it('lässt eine Metrik weg, wenn ihr Wert null ist', () => {
     render(<FrageAuswertung frageText="Frage" auswertung={{ ...GUTE_AUSWERTUNG, bewegungsruhe: null }} />)
 
-    expect(screen.queryByText('Bewegungsruhe')).not.toBeInTheDocument()
+    expect(screen.queryByText('Bewegung')).not.toBeInTheDocument()
+  })
+
+  it('erklärt bei der Bewegung, dass weniger ruhiger bedeutet', () => {
+    render(<FrageAuswertung frageText="Frage" auswertung={GUTE_AUSWERTUNG} />)
+
+    expect(screen.getByText(/weniger ist ruhiger/i)).toBeInTheDocument()
+  })
+
+  describe('Worauf du achten kannst', () => {
+    it('zeigt Hinweise für Kennzahlen außerhalb des Zielbereichs', () => {
+      render(
+        <FrageAuswertung
+          frageText="Frage"
+          auswertung={{ ...GUTE_AUSWERTUNG, kopfausrichtungProzent: 40, redeflussProzent: 30 }}
+        />,
+      )
+
+      expect(screen.getByRole('heading', { name: 'Worauf du achten kannst' })).toBeInTheDocument()
+      expect(screen.getByText(/Nur 40 % der Zeit war dein Kopf zur Kamera gerichtet/)).toBeInTheDocument()
+      expect(screen.getByText(/Dein Redefluss lag bei 30 %/)).toBeInTheDocument()
+    })
+
+    it('lobt, wenn alles im Zielbereich liegt, statt eine leere Liste zu zeigen', () => {
+      render(<FrageAuswertung frageText="Frage" auswertung={GUTE_AUSWERTUNG} />)
+
+      expect(screen.queryByRole('heading', { name: 'Worauf du achten kannst' })).not.toBeInTheDocument()
+      expect(screen.getByText(/Alles im Zielbereich/)).toBeInTheDocument()
+    })
+
+    it('zeigt weder Hinweise noch Lob, wenn gar keine Kennzahl vorliegt', () => {
+      render(
+        <FrageAuswertung
+          frageText="Frage"
+          auswertung={{
+            ...GUTE_AUSWERTUNG,
+            auswertbar: false,
+            abdeckung: 0.2,
+            kopfausrichtungProzent: null,
+            haltungGradMedian: null,
+            bewegungsruhe: null,
+            redeflussProzent: null,
+            laengstePauseSekunden: null,
+            fuellwoerterProMinute: null,
+          }}
+        />,
+      )
+
+      expect(screen.queryByText(/Alles im Zielbereich/)).not.toBeInTheDocument()
+      expect(screen.queryByRole('heading', { name: 'Worauf du achten kannst' })).not.toBeInTheDocument()
+    })
   })
 })

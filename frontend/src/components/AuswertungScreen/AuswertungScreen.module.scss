@@ -1,9 +1,20 @@
 @use '../../styles/tokens' as *;
+@use '../../styles/controls' as *;
 
 .wrapper {
   display: flex;
   flex-direction: column;
   gap: $space-4;
+}
+
+.wrapper h1 {
+  margin: 0;
+}
+
+.hinweis {
+  margin: 0;
+  font-size: $font-size-sm;
+  color: $color-text-muted;
 }
 
 .tabs {
@@ -13,39 +24,19 @@
 }
 
 .tab {
-  padding: $space-2 $space-4;
-  border: 1px solid $color-border;
-  border-radius: $radius-pill;
-  background: $color-surface;
-  color: $color-text;
-  cursor: pointer;
-}
-
-.tabActive {
-  background: $color-text;
-  color: $color-surface;
-  border-color: $color-text;
+  @include option-pill;
 }
 
 .buttons {
   display: flex;
+  flex-wrap: wrap;
   gap: $space-2;
 }
 
-.button {
-  padding: $space-2 $space-4;
-  border-radius: $radius-pill;
-  cursor: pointer;
-}
-
 .buttonPrimary {
-  border: none;
-  background: $color-accent;
-  color: $color-surface;
+  @include button-primaer;
 }
 
 .buttonSecondary {
-  border: 1px solid $color-border;
-  background: $color-surface;
-  color: $color-text;
+  @include button-sekundaer;
 }

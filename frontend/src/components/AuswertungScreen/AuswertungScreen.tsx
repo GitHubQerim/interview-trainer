@@ -35,13 +35,18 @@ export function AuswertungScreen({ ergebnisse, onNochmalUeben, onVerlaufAnsehen 
   return (
     <div className={styles.wrapper}>
       <h1>Auswertung</h1>
+      <p className={styles.hinweis}>
+        Die Zielbereiche sind Orientierungswerte aus eigenen Tests, nicht wissenschaftlich validiert. Das hier ist eine
+        Trainingshilfe und keine Bewertung deiner Eignung.
+      </p>
 
       <div className={styles.tabs}>
         {ergebnisse.map((eintrag, index) => (
           <button
             key={eintrag.frage.id}
             type="button"
-            className={index === ausgewaehlterIndex ? `${styles.tab} ${styles.tabActive}` : styles.tab}
+            aria-pressed={index === ausgewaehlterIndex}
+            className={styles.tab}
             onClick={() => setAusgewaehlterIndex(index)}
           >
             Frage {index + 1}
@@ -52,10 +57,10 @@ export function AuswertungScreen({ ergebnisse, onNochmalUeben, onVerlaufAnsehen 
       <FrageAuswertung frageText={ausgewaehlteFrage.frage.text} auswertung={auswertung} />
 
       <div className={styles.buttons}>
-        <button type="button" className={`${styles.button} ${styles.buttonPrimary}`} onClick={onNochmalUeben}>
+        <button type="button" className={styles.buttonPrimary} onClick={onNochmalUeben}>
           Nochmal üben
         </button>
-        <button type="button" className={`${styles.button} ${styles.buttonSecondary}`} onClick={onVerlaufAnsehen}>
+        <button type="button" className={styles.buttonSecondary} onClick={onVerlaufAnsehen}>
           Verlauf ansehen
         </button>
       </div>

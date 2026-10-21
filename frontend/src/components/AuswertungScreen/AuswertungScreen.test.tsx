@@ -56,7 +56,7 @@ describe('AuswertungScreen', () => {
     expect(screen.getByText('Erste Frage')).toBeInTheDocument()
     expect(screen.getByText('Kopfausrichtung (%)')).toBeInTheDocument()
     expect(screen.getByText('Aufrechte Haltung (°)')).toBeInTheDocument()
-    expect(screen.getByText('Bewegungsruhe')).toBeInTheDocument()
+    expect(screen.getByText('Bewegung')).toBeInTheDocument()
   })
 
   it('wechselt per Tab zur zweiten Frage', () => {
@@ -86,5 +86,27 @@ describe('AuswertungScreen', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Nochmal üben' }))
 
     expect(onNochmalUeben).toHaveBeenCalled()
+  })
+
+  it('weist darauf hin, dass die Zielbereiche Orientierungswerte einer Trainingshilfe sind', () => {
+    render(
+      <AuswertungScreen
+        ergebnisse={[auswertbareErgebnisse('1', 'Erste Frage')]}
+        onNochmalUeben={vi.fn()}
+        onVerlaufAnsehen={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByText(/Orientierungswerte/)).toBeInTheDocument()
+    expect(screen.getByText(/keine Bewertung/)).toBeInTheDocument()
+  })
+
+  it('kennzeichnet die gewählte Frage im Tab mit aria-pressed', () => {
+    const ergebnisse = [auswertbareErgebnisse('1', 'Erste Frage'), auswertbareErgebnisse('2', 'Zweite Frage')]
+
+    render(<AuswertungScreen ergebnisse={ergebnisse} onNochmalUeben={vi.fn()} onVerlaufAnsehen={vi.fn()} />)
+
+    expect(screen.getByRole('button', { name: 'Frage 1' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'Frage 2' })).toHaveAttribute('aria-pressed', 'false')
   })
 })

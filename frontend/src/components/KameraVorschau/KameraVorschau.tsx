@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { bewerteKameraSetup, type HinweisStatus } from '../../domain/kameraSetup'
+import { useSpiegeln } from '../../media/spiegeln'
 import { useAnalysisWorker, type AnalysisResultPayload } from '../../media/useAnalysisWorker'
 import styles from './KameraVorschau.module.scss'
 import { zeichneOverlay } from './zeichneOverlay'
 
-const SPIEGELN_SCHLUESSEL = 'interview-trainer.vorschau-spiegeln'
 const STANDARD_SEITENVERHAELTNIS = 16 / 9
 
 const STATUS_LABEL: Record<HinweisStatus, string> = {
@@ -13,31 +13,13 @@ const STATUS_LABEL: Record<HinweisStatus, string> = {
   unbekannt: '…',
 }
 
-// localStorage nur als Komfort pro Browser: blockiert (privates Fenster, gesperrte
-// Website-Daten) faellt es still auf den Standard "gespiegelt" zurueck.
-function ladeSpiegeln(): boolean {
-  try {
-    return window.localStorage.getItem(SPIEGELN_SCHLUESSEL) !== 'false'
-  } catch {
-    return true
-  }
-}
-
-function speichereSpiegeln(wert: boolean): void {
-  try {
-    window.localStorage.setItem(SPIEGELN_SCHLUESSEL, String(wert))
-  } catch {
-    // Einstellung gilt dann nur fuer diese Sitzung.
-  }
-}
-
 interface KameraVorschauProps {
   deaktiviert: boolean
 }
 
 export function KameraVorschau({ deaktiviert }: KameraVorschauProps) {
   const [an, setAn] = useState(false)
-  const [spiegeln, setSpiegeln] = useState(ladeSpiegeln)
+  const [spiegeln, setSpiegeln] = useSpiegeln()
   const [ergebnis, setErgebnis] = useState<AnalysisResultPayload | null>(null)
   const [seitenverhaeltnis, setSeitenverhaeltnis] = useState(STANDARD_SEITENVERHAELTNIS)
   const [vorherDeaktiviert, setVorherDeaktiviert] = useState(deaktiviert)
@@ -90,11 +72,6 @@ export function KameraVorschau({ deaktiviert }: KameraVorschauProps) {
     void start()
   }
 
-  function umschaltenSpiegeln(wert: boolean) {
-    setSpiegeln(wert)
-    speichereSpiegeln(wert)
-  }
-
   const verweigert = an && status === 'permission-denied'
   const fehler = an && status === 'error'
   const wirdVorbereitet = an && (status === 'requesting-permission' || status === 'loading-model')
@@ -123,7 +100,7 @@ export function KameraVorschau({ deaktiviert }: KameraVorschauProps) {
           />
           <canvas ref={canvasRef} className={styles.canvas} aria-hidden="true" />
         </div>
-        {!an && <div className={styles.platzhalter}>Kamera ist aus</div>}
+        {!an && <div className={styles.platzhalter}>Kamera ist aus. Schalte sie ein, um Bildausschnitt und Sitzhaltung zu prüfen.</div>}
       </div>
 
       <div className={styles.steuerung}>
@@ -131,7 +108,7 @@ export function KameraVorschau({ deaktiviert }: KameraVorschauProps) {
           {an ? 'Kamera ausschalten' : 'Kamera einschalten'}
         </button>
         <label className={styles.spiegelLabel}>
-          <input type="checkbox" checked={spiegeln} onChange={(event) => umschaltenSpiegeln(event.target.checked)} />
+          <input type="checkbox" checked={spiegeln} onChange={(event) => setSpiegeln(event.target.checked)} />
           Spiegelbild
         </label>
       </div>

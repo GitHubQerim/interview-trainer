@@ -1,4 +1,5 @@
 @use '../../styles/tokens' as *;
+@use '../../styles/controls' as *;
 
 .root {
   display: flex;
@@ -59,20 +60,9 @@
   gap: $space-3 $space-4;
 }
 
+// Kameraschalter ist ein Sekundaer-Button wie die uebrigen Aktionen
 .kameraButton {
-  padding: $space-2 $space-4;
-  border: 1px solid $color-accent;
-  border-radius: $radius-pill;
-  background: $color-accent-bg;
-  color: $color-accent;
-  cursor: pointer;
-
-  &:disabled {
-    border-color: $color-border;
-    background: transparent;
-    color: $color-text-muted;
-    cursor: not-allowed;
-  }
+  @include button-sekundaer;
 }
 
 .spiegelLabel {
@@ -106,8 +96,10 @@
 }
 
 .hinweis {
-  display: flex;
-  flex-wrap: wrap;
+  // Status-Label links in fester Spalte, Text daneben, Detail darunter: alle vier
+  // Karten haben so denselben Aufbau, egal wie lang der Text ist.
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: baseline;
   gap: $space-1 $space-2;
   padding: $space-2 $space-3;
@@ -121,7 +113,7 @@
 }
 
 .detail {
-  flex-basis: 100%;
+  grid-column: 2;
   color: $color-text-muted;
 }
 

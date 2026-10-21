@@ -119,12 +119,17 @@ describe('istImZielkorridor', () => {
     expect(istImZielkorridor('kopfausrichtung', 50)).toBe(false)
   })
 
-  it('Bewegungsruhe 0.61 liegt ausserhalb des Zielkorridors (0.03-0.25)', () => {
+  it('Bewegung 0.61 liegt ausserhalb des Zielkorridors (0-0.25)', () => {
     expect(istImZielkorridor('bewegungsruhe', 0.61)).toBe(false)
   })
 
-  it('Bewegungsruhe 0.1 liegt im Zielkorridor (0.03-0.25)', () => {
+  it('Bewegung 0.1 liegt im Zielkorridor (0-0.25)', () => {
     expect(istImZielkorridor('bewegungsruhe', 0.1)).toBe(true)
+  })
+
+  it('sehr ruhiges Sitzen (Bewegung 0) liegt im Zielkorridor, es gibt keine Untergrenze', () => {
+    expect(istImZielkorridor('bewegungsruhe', 0)).toBe(true)
+    expect(istImZielkorridor('bewegungsruhe', 0.01)).toBe(true)
   })
 
   it('Haltung 5 Grad liegt im Zielkorridor (0-6 Grad)', () => {

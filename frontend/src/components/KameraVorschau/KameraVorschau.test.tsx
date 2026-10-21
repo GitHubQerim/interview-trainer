@@ -42,7 +42,7 @@ function ergebnis(schulterLinksY: number): AnalysisResultPayload {
   return {
     timestamp: 1,
     durationMs: 10,
-    faceLandmarks: [punkt(0.4, 0.2), punkt(0.6, 0.2), punkt(0.5, 0.4)],
+    faceLandmarks: [punkt(0.4, 0.2), punkt(0.5, 0.3), punkt(0.6, 0.2)],
     poseLandmarks: pose,
   }
 }

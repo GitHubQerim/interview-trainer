@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
-import { getFragen, type Schwierigkeit } from '../../domain/fragenkatalog'
+import { getBerufe, getFragen, type Schwierigkeit } from '../../domain/fragenkatalog'
 import { MODUS_OPTIONEN, type Modus, type SessionConfig } from '../../domain/session'
 import { KameraVorschau } from '../KameraVorschau/KameraVorschau'
 import styles from './SetupScreen.module.scss'
 
-const BERUF_VORSCHLAEGE = ['Softwareentwicklung', 'Vertrieb', 'Pflege', 'Projektmanagement']
 const SCHWIERIGKEITEN: Schwierigkeit[] = ['leicht', 'mittel', 'hart']
 
 interface SetupScreenProps {
@@ -12,12 +11,39 @@ interface SetupScreenProps {
 }
 
 export function SetupScreen({ onStart }: SetupScreenProps) {
-  const [beruf, setBeruf] = useState('Softwareentwicklung')
+  const [berufe, setBerufe] = useState<string[] | null>(null)
+  const [berufeFehler, setBerufeFehler] = useState(false)
+  const [beruf, setBeruf] = useState<string | null>(null)
   const [schwierigkeit, setSchwierigkeit] = useState<Schwierigkeit>('mittel')
   const [modus, setModus] = useState<Modus>('video-ton')
   const [fragenAnzahl, setFragenAnzahl] = useState<number | null>(null)
 
   useEffect(() => {
+    let aktuell = true
+
+    getBerufe()
+      .then((liste) => {
+        if (aktuell) {
+          setBerufe(liste)
+          setBeruf((aktuelle) => aktuelle ?? liste[0] ?? null)
+        }
+      })
+      .catch(() => {
+        if (aktuell) {
+          setBerufeFehler(true)
+        }
+      })
+
+    return () => {
+      aktuell = false
+    }
+  }, [])
+
+  useEffect(() => {
+    if (beruf === null) {
+      return
+    }
+
     let aktuell = true
 
     getFragen(beruf, schwierigkeit)
@@ -38,6 +64,15 @@ export function SetupScreen({ onStart }: SetupScreenProps) {
   }, [beruf, schwierigkeit])
 
   const keineFragenVerfuegbar = fragenAnzahl === 0
+  const startGesperrt = beruf === null || keineFragenVerfuegbar
+  const fragenStatusText =
+    beruf === null
+      ? ''
+      : fragenAnzahl === null
+        ? 'Prüfe verfügbare Fragen...'
+        : keineFragenVerfuegbar
+          ? 'Keine Fragen für diese Auswahl verfügbar.'
+          : `${fragenAnzahl} Fragen verfügbar.`
 
   return (
     <div className={styles.wrapper}>
@@ -49,19 +84,23 @@ export function SetupScreen({ onStart }: SetupScreenProps) {
       <div className={styles.columns}>
         <div className={styles.card}>
           <div>
-            <label className={styles.label} htmlFor="beruf">
-              Beruf oder Rolle
-            </label>
-            <input
-              id="beruf"
-              className={styles.input}
-              value={beruf}
-              onChange={(event) => setBeruf(event.target.value)}
-            />
-            <div className={styles.chipRow}>
-              {BERUF_VORSCHLAEGE.map((vorschlag) => (
-                <button key={vorschlag} type="button" className={styles.chip} onClick={() => setBeruf(vorschlag)}>
-                  {vorschlag}
+            <span className={styles.label}>Beruf oder Rolle</span>
+            {berufeFehler && (
+              <p role="alert" className={styles.fehler}>
+                Berufe konnten nicht geladen werden. Läuft das Backend?
+              </p>
+            )}
+            {!berufeFehler && berufe === null && <p className={styles.hinweis}>Lade Berufe...</p>}
+            <div className={styles.karteListe}>
+              {(berufe ?? []).map((name) => (
+                <button
+                  key={name}
+                  type="button"
+                  aria-pressed={name === beruf}
+                  className={styles.karte}
+                  onClick={() => setBeruf(name)}
+                >
+                  {name}
                 </button>
               ))}
             </div>
@@ -75,7 +114,7 @@ export function SetupScreen({ onStart }: SetupScreenProps) {
                   key={stufe}
                   type="button"
                   aria-pressed={stufe === schwierigkeit}
-                  className={stufe === schwierigkeit ? `${styles.pill} ${styles.pillActive}` : styles.pill}
+                  className={styles.pill}
                   onClick={() => setSchwierigkeit(stufe)}
                 >
                   {stufe}
@@ -86,19 +125,17 @@ export function SetupScreen({ onStart }: SetupScreenProps) {
 
           <div>
             <span className={styles.label}>Modus</span>
-            <div className={styles.modusRow}>
+            <div className={styles.karteListe}>
               {MODUS_OPTIONEN.map((option) => (
                 <button
                   key={option.value}
                   type="button"
                   aria-pressed={option.value === modus}
-                  className={
-                    option.value === modus ? `${styles.modusCard} ${styles.modusCardActive}` : styles.modusCard
-                  }
+                  className={styles.karte}
                   onClick={() => setModus(option.value)}
                 >
-                  <span className={styles.modusTitle}>{option.titel}</span>
-                  <span className={styles.modusSubtitle}>{option.untertitel}</span>
+                  <span className={styles.karteTitel}>{option.titel}</span>
+                  <span className={styles.karteUntertitel}>{option.untertitel}</span>
                 </button>
               ))}
             </div>
@@ -107,20 +144,15 @@ export function SetupScreen({ onStart }: SetupScreenProps) {
 
         <div className={styles.card}>
           <KameraVorschau deaktiviert={modus !== 'video-ton'} />
-          <p className={styles.caption}>Kopf und Schultern im Rahmen halten.</p>
           <div className={styles.startBereich}>
             <p className={styles.fragenStatus}>
-              {fragenAnzahl === null
-                ? 'Prüfe verfügbare Fragen...'
-                : keineFragenVerfuegbar
-                  ? 'Keine Fragen für diese Auswahl verfügbar.'
-                  : `${fragenAnzahl} Fragen verfügbar.`}
+              {fragenStatusText}
             </p>
             <button
               type="button"
               className={styles.startButton}
-              disabled={keineFragenVerfuegbar}
-              onClick={() => onStart({ beruf, schwierigkeit, modus })}
+              disabled={startGesperrt}
+              onClick={() => beruf !== null && onStart({ beruf, schwierigkeit, modus })}
             >
               Interview starten
             </button>

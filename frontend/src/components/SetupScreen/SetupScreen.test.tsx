@@ -3,44 +3,86 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as fragenkatalog from '../../domain/fragenkatalog'
 import { SetupScreen } from './SetupScreen'
 
+function mockKatalog(berufe = ['Softwareentwicklung', 'Vertrieb']) {
+  vi.spyOn(fragenkatalog, 'getBerufe').mockResolvedValue(berufe)
+  vi.spyOn(fragenkatalog, 'getFragen').mockResolvedValue([{ id: '1', text: 'Frage' }])
+}
+
 describe('SetupScreen', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
   })
 
-  it('setzt das Beruf-Feld beim Klick auf einen Vorschlags-Chip', async () => {
-    vi.spyOn(fragenkatalog, 'getFragen').mockResolvedValue([{ id: '1', text: 'Frage' }])
+  describe('Berufsauswahl', () => {
+    it('bietet nur die Berufe aus dem Katalog an, ohne freies Textfeld', async () => {
+      mockKatalog(['Softwareentwicklung', 'Vertrieb'])
 
-    render(<SetupScreen onStart={vi.fn()} />)
+      render(<SetupScreen onStart={vi.fn()} />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Vertrieb' }))
+      expect(await screen.findByRole('button', { name: /Vertrieb/ })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /Softwareentwicklung/ })).toBeInTheDocument()
+      expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+    })
 
-    expect(screen.getByLabelText('Beruf oder Rolle')).toHaveValue('Vertrieb')
+    it('waehlt den ersten Beruf vor und kennzeichnet ihn', async () => {
+      mockKatalog()
+
+      render(<SetupScreen onStart={vi.fn()} />)
+
+      expect(await screen.findByRole('button', { name: /Softwareentwicklung/ })).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      )
+      expect(screen.getByRole('button', { name: /Vertrieb/ })).toHaveAttribute('aria-pressed', 'false')
+    })
+
+    it('wechselt den Beruf per Klick und laedt dessen Fragen', async () => {
+      mockKatalog()
+
+      render(<SetupScreen onStart={vi.fn()} />)
+      fireEvent.click(await screen.findByRole('button', { name: /Vertrieb/ }))
+
+      expect(screen.getByRole('button', { name: /Vertrieb/ })).toHaveAttribute('aria-pressed', 'true')
+      await waitFor(() => {
+        expect(fragenkatalog.getFragen).toHaveBeenLastCalledWith('Vertrieb', 'mittel')
+      })
+    })
+
+    it('erklaert, wenn der Katalog nicht geladen werden kann, und sperrt den Start', async () => {
+      vi.spyOn(fragenkatalog, 'getBerufe').mockRejectedValue(new Error('offline'))
+      vi.spyOn(fragenkatalog, 'getFragen').mockResolvedValue([])
+
+      render(<SetupScreen onStart={vi.fn()} />)
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(/Berufe konnten nicht geladen werden/)
+      expect(screen.getByRole('button', { name: 'Interview starten' })).toBeDisabled()
+    })
   })
 
   it('wechselt die aktive Schwierigkeit', async () => {
-    vi.spyOn(fragenkatalog, 'getFragen').mockResolvedValue([{ id: '1', text: 'Frage' }])
+    mockKatalog()
 
     render(<SetupScreen onStart={vi.fn()} />)
 
-    const hartButton = screen.getByRole('button', { name: 'hart' })
+    const hartButton = await screen.findByRole('button', { name: /hart/ })
     fireEvent.click(hartButton)
 
     expect(hartButton).toHaveAttribute('aria-pressed', 'true')
   })
 
   it('wechselt den aktiven Modus', async () => {
-    vi.spyOn(fragenkatalog, 'getFragen').mockResolvedValue([{ id: '1', text: 'Frage' }])
+    mockKatalog()
 
     render(<SetupScreen onStart={vi.fn()} />)
 
-    const nurTonButton = screen.getByRole('button', { name: /Nur Ton/ })
+    const nurTonButton = await screen.findByRole('button', { name: /Nur Ton/ })
     fireEvent.click(nurTonButton)
 
     expect(nurTonButton).toHaveAttribute('aria-pressed', 'true')
   })
 
   it('deaktiviert den Start-Button, wenn keine Fragen verfuegbar sind', async () => {
+    vi.spyOn(fragenkatalog, 'getBerufe').mockResolvedValue(['Softwareentwicklung'])
     vi.spyOn(fragenkatalog, 'getFragen').mockResolvedValue([])
 
     render(<SetupScreen onStart={vi.fn()} />)
@@ -52,7 +94,7 @@ describe('SetupScreen', () => {
   })
 
   it('ruft onStart mit der aktuellen Auswahl auf', async () => {
-    vi.spyOn(fragenkatalog, 'getFragen').mockResolvedValue([{ id: '1', text: 'Frage' }])
+    mockKatalog()
     const onStart = vi.fn()
 
     render(<SetupScreen onStart={onStart} />)
@@ -61,29 +103,30 @@ describe('SetupScreen', () => {
       expect(screen.getByRole('button', { name: 'Interview starten' })).toBeEnabled()
     })
 
-    fireEvent.click(screen.getByRole('button', { name: 'hart' }))
+    fireEvent.click(screen.getByRole('button', { name: /Vertrieb/ }))
+    fireEvent.click(screen.getByRole('button', { name: /hart/ }))
     fireEvent.click(screen.getByRole('button', { name: 'Interview starten' }))
 
-    expect(onStart).toHaveBeenCalledWith({ beruf: 'Softwareentwicklung', schwierigkeit: 'hart', modus: 'video-ton' })
+    expect(onStart).toHaveBeenCalledWith({ beruf: 'Vertrieb', schwierigkeit: 'hart', modus: 'video-ton' })
   })
 
   it('bietet die Kameravorschau nur im Modus Video und Ton an', async () => {
-    vi.spyOn(fragenkatalog, 'getFragen').mockResolvedValue([{ id: '1', text: 'Frage' }])
+    mockKatalog()
 
     render(<SetupScreen onStart={vi.fn()} />)
 
-    expect(screen.getByRole('button', { name: 'Kamera einschalten' })).toBeEnabled()
+    expect(await screen.findByRole('button', { name: 'Kamera einschalten' })).toBeEnabled()
 
     fireEvent.click(screen.getByRole('button', { name: /Nur Ton/ }))
 
     expect(screen.getByRole('button', { name: 'Kamera einschalten' })).toBeDisabled()
   })
 
-  it('weist darauf hin, dass die Kamera erst auf Klick startet', () => {
-    vi.spyOn(fragenkatalog, 'getFragen').mockResolvedValue([{ id: '1', text: 'Frage' }])
+  it('weist darauf hin, dass die Kamera erst auf Klick startet', async () => {
+    mockKatalog()
 
     render(<SetupScreen onStart={vi.fn()} />)
 
-    expect(screen.getByText(/Kamera ist aus, bis Sie die Vorschau einschalten/)).toBeInTheDocument()
+    expect(await screen.findByText(/Kamera ist aus, bis Sie die Vorschau einschalten/)).toBeInTheDocument()
   })
 })

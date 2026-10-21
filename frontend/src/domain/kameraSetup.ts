@@ -1,11 +1,11 @@
 import type { NormalizedLandmark } from '@mediapipe/tasks-vision'
-import { haltungsWinkel, schulterbreite } from './features'
-import { istImZielkorridor } from './score'
+import { haltungsWinkel, kopfZentriertheit, schulterbreite } from './features'
+import { istImZielkorridor, KOPFAUSRICHTUNG_SCHWELLE } from './score'
 
 export type HinweisStatus = 'ok' | 'achtung' | 'unbekannt'
 
 export interface SetupHinweis {
-  id: 'kopf-im-bild' | 'schultern-sichtbar' | 'abstand' | 'schulterneigung'
+  id: 'kopf-im-bild' | 'kopf-zur-kamera' | 'schultern-sichtbar' | 'abstand' | 'schulterneigung'
   status: HinweisStatus
   text: string
   detail: string | null
@@ -57,6 +57,18 @@ function bewerteKopf(face: NormalizedLandmark[]): SetupHinweis {
     : { id: 'kopf-im-bild', status: 'ok', text: 'Kopf im Bild', detail: null }
 }
 
+function bewerteKopfAusrichtung(face: NormalizedLandmark[]): SetupHinweis {
+  const ausrichtung = kopfZentriertheit(face)
+  if (ausrichtung === null) {
+    return { id: 'kopf-zur-kamera', status: 'unbekannt', text: 'Kopfrichtung unbekannt', detail: null }
+  }
+
+  const detail = `Ausrichtung ${Math.round(ausrichtung * 100)} %`
+  return ausrichtung >= KOPFAUSRICHTUNG_SCHWELLE
+    ? { id: 'kopf-zur-kamera', status: 'ok', text: 'Kopf zur Kamera', detail }
+    : { id: 'kopf-zur-kamera', status: 'achtung', text: 'Kopf zur Kamera drehen', detail }
+}
+
 function bewerteSchultern(pose: NormalizedLandmark[]): SetupHinweis {
   if (pose.length === 0) {
     return { id: 'schultern-sichtbar', status: 'unbekannt', text: 'Schultern nicht erkannt', detail: null }
@@ -98,9 +110,10 @@ function bewerteNeigung(pose: NormalizedLandmark[]): SetupHinweis {
 /**
  * Live-Hinweise fuer die Kameravorschau im Setup. Nutzt dieselben Features und den
  * Haltungs-Zielkorridor der Auswertung, damit die Vorschau nie anders bewertet als
- * das spaetere Ergebnis. Die Kopfausrichtung ist bewusst nicht dabei: ihre Formel
- * ist laut ADR-0005-Nachtrag noch nicht belastbar.
+ * das spaetere Ergebnis. Die Kopfausrichtung ist dabei, seit der Test vom 21.10.2026 gezeigt
+ * hat, dass der Rohwert mit seitlicher Drehung deutlich faellt (frontal 0,92-0,97, mittlere
+ * Drehung 0,52, Profil 0,03).
  */
 export function bewerteKameraSetup(face: NormalizedLandmark[], pose: NormalizedLandmark[]): SetupHinweis[] {
-  return [bewerteKopf(face), bewerteSchultern(pose), bewerteAbstand(pose), bewerteNeigung(pose)]
+  return [bewerteKopf(face), bewerteKopfAusrichtung(face), bewerteSchultern(pose), bewerteAbstand(pose), bewerteNeigung(pose)]
 }

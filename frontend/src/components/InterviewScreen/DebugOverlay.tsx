@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { haltungsWinkel, kopfZentriertheit } from '../../domain/features'
+import type { VadAnalyse } from '../../domain/redefluss'
 import { istImZielkorridor, type Auswertung } from '../../domain/score'
 import type { AnalysisResultPayload } from '../../media/useAnalysisWorker'
 
@@ -12,11 +13,23 @@ import type { AnalysisResultPayload } from '../../media/useAnalysisWorker'
 interface DebugOverlayProps {
   videoElement: HTMLVideoElement | null
   letztesErgebnis: AnalysisResultPayload | null
-  liveAuswertung: Auswertung | null
-  framerate: number
 }
 
-export function DebugOverlay({ videoElement, letztesErgebnis, liveAuswertung, framerate }: DebugOverlayProps) {
+export interface DebugAudio {
+  pegel: number
+  vad: VadAnalyse
+}
+
+interface DebugWerteProps {
+  letztesErgebnis: AnalysisResultPayload | null
+  liveAuswertung: Auswertung | null
+  framerate: number
+  audio: DebugAudio | null
+}
+
+// Zeichnet nur die Landmarks ins Bild. Die Messwerte stehen bewusst daneben
+// (DebugWerte), damit sie das Gesicht nicht verdecken.
+export function DebugOverlay({ videoElement, letztesErgebnis }: DebugOverlayProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
 
   useEffect(() => {
@@ -68,18 +81,17 @@ export function DebugOverlay({ videoElement, letztesErgebnis, liveAuswertung, fr
     }
   }, [letztesErgebnis, videoElement])
 
+  return <canvas ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }} />
+}
+
+export function DebugWerte({ letztesErgebnis, liveAuswertung, framerate, audio }: DebugWerteProps) {
   const kopfRoh = letztesErgebnis ? kopfZentriertheit(letztesErgebnis.faceLandmarks) : null
   const haltungRoh = letztesErgebnis ? haltungsWinkel(letztesErgebnis.poseLandmarks) : null
 
   return (
-    <>
-      <canvas ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }} />
       <div
         style={{
-          position: 'absolute',
-          top: 8,
-          right: 8,
-          background: 'rgba(0,0,0,0.7)',
+          background: 'rgba(255,255,255,0.08)',
           color: '#fff',
           padding: 8,
           fontSize: 12,
@@ -99,7 +111,11 @@ export function DebugOverlay({ videoElement, letztesErgebnis, liveAuswertung, fr
           {liveAuswertung?.haltungGradMedian != null ? `${liveAuswertung.haltungGradMedian.toFixed(1)}°` : '–'}
         </div>
         <div>Bewegungsruhe agg: {liveAuswertung?.bewegungsruhe != null ? liveAuswertung.bewegungsruhe.toFixed(3) : '–'}</div>
+        <div>
+          Pegel: {audio ? audio.pegel.toFixed(3) : '–'} | Boden: {audio ? audio.vad.rauschboden.toFixed(3) : '–'} |
+          Sprech: {audio ? audio.vad.sprechpegel.toFixed(3) : '–'} | Schwelle: {audio ? audio.vad.schwelle.toFixed(3) : '–'}
+        </div>
+        <div>Audio: {audio ? (audio.vad.stille ? 'Stille' : audio.vad.durchgehend ? 'durchgehend' : 'mit Pausen') : '–'}</div>
       </div>
-    </>
   )
 }

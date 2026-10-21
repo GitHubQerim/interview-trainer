@@ -1,4 +1,5 @@
 @use '../../styles/tokens' as *;
+@use '../../styles/controls' as *;
 
 .wrapper {
   display: flex;
@@ -7,13 +8,7 @@
 }
 
 .button {
-  padding: $space-1 $space-3;
-  border-radius: $radius-pill;
-  border: 1px solid $color-border;
-  background: $color-surface;
-  color: $color-text-muted;
-  font-size: $font-size-sm;
-  cursor: pointer;
+  @include button-sekundaer;
 }
 
 .fehler {

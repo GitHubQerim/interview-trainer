@@ -57,4 +57,24 @@ describe('MetrikBalken', () => {
     expect(screen.getByText('So wurde das gemessen')).toBeInTheDocument()
     expect(screen.getByText('Winkel zwischen Huefte und Schulter.')).toBeInTheDocument()
   })
+
+  it('zeigt Untertitel und Zusatzinfo unter dem Balken', () => {
+    render(
+      <MetrikBalken
+        label="Bewegung"
+        untertitel="weniger ist ruhiger"
+        zusatz={<p>Zusatzzeile</p>}
+        wert={0.1}
+        anzeigeMin={0}
+        anzeigeMax={1}
+        zielkorridorMin={0}
+        zielkorridorMax={0.25}
+        imZielkorridor
+        messmethode="Testmethode"
+      />,
+    )
+
+    expect(screen.getByText('weniger ist ruhiger')).toBeInTheDocument()
+    expect(screen.getByText('Zusatzzeile')).toBeInTheDocument()
+  })
 })

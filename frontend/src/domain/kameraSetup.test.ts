@@ -13,7 +13,8 @@ function pose(links: NormalizedLandmark, rechts: NormalizedLandmark): Normalized
   return landmarks
 }
 
-const GUTES_GESICHT = [punkt(0.4, 0.2), punkt(0.6, 0.2), punkt(0.5, 0.4)]
+// Index 1 ist die Nasenspitze (wie im Face-Mesh) und sitzt hier mittig im Gesicht.
+const GUTES_GESICHT = [punkt(0.4, 0.2), punkt(0.5, 0.3), punkt(0.6, 0.2)]
 const GUTE_POSE = pose(punkt(0.35, 0.7), punkt(0.65, 0.7))
 
 function hinweis(hinweise: SetupHinweis[], id: SetupHinweis['id']): SetupHinweis {
@@ -25,11 +26,12 @@ function hinweis(hinweise: SetupHinweis[], id: SetupHinweis['id']): SetupHinweis
 }
 
 describe('bewerteKameraSetup', () => {
-  it('meldet bei gutem Setup alle vier Hinweise als ok', () => {
+  it('meldet bei gutem Setup alle fuenf Hinweise als ok', () => {
     const hinweise = bewerteKameraSetup(GUTES_GESICHT, GUTE_POSE)
 
     expect(hinweise.map((eintrag) => eintrag.id)).toEqual([
       'kopf-im-bild',
+      'kopf-zur-kamera',
       'schultern-sichtbar',
       'abstand',
       'schulterneigung',
@@ -54,6 +56,37 @@ describe('bewerteKameraSetup', () => {
       const hinweise = bewerteKameraSetup([punkt(0.5, 0.2), punkt(0.99, 0.3)], GUTE_POSE)
 
       expect(hinweis(hinweise, 'kopf-im-bild').status).toBe('achtung')
+    })
+  })
+
+  describe('kopf-zur-kamera', () => {
+    it('ist ok, wenn die Nase mittig im Gesicht sitzt', () => {
+      const hinweise = bewerteKameraSetup(GUTES_GESICHT, GUTE_POSE)
+
+      expect(hinweis(hinweise, 'kopf-zur-kamera').status).toBe('ok')
+    })
+
+    it('raet zur Drehung, wenn die Nase deutlich seitlich sitzt (Kopf zur Seite gedreht)', () => {
+      // Nase bei 90 % der Gesichtsbreite -> Ausrichtung 0,2, unter der Schwelle der Auswertung.
+      const gedreht = [punkt(0.4, 0.2), punkt(0.58, 0.3), punkt(0.6, 0.2)]
+
+      const eintrag = hinweis(bewerteKameraSetup(gedreht, GUTE_POSE), 'kopf-zur-kamera')
+
+      expect(eintrag.status).toBe('achtung')
+      expect(eintrag.text).toMatch(/zur Kamera drehen/)
+    })
+
+    it('nutzt dieselbe Schwelle wie die Auswertung (0,7)', () => {
+      // Nase bei 60 % -> Ausrichtung 0,8 (ok); bei 70 % -> 0,6 (unter 0,7).
+      const leicht = [punkt(0.4, 0.2), punkt(0.52, 0.3), punkt(0.6, 0.2)]
+      const staerker = [punkt(0.4, 0.2), punkt(0.54, 0.3), punkt(0.6, 0.2)]
+
+      expect(hinweis(bewerteKameraSetup(leicht, GUTE_POSE), 'kopf-zur-kamera').status).toBe('ok')
+      expect(hinweis(bewerteKameraSetup(staerker, GUTE_POSE), 'kopf-zur-kamera').status).toBe('achtung')
+    })
+
+    it('ist unbekannt, wenn kein Gesicht erkannt wird', () => {
+      expect(hinweis(bewerteKameraSetup([], GUTE_POSE), 'kopf-zur-kamera').status).toBe('unbekannt')
     })
   })
 
