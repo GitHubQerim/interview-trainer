@@ -44,7 +44,10 @@ export const BEWEGUNGSRUHE_ZIELKORRIDOR = { min: 0, max: 0.25 }
 // Herkunft: eigene Einschaetzung, nicht empirisch validiert - Redefluss (Sprechanteil
 // innerhalb des bereits um Vorlese-/Bedenkzeit bereinigten Antwortbereichs) existiert
 // noch nicht lange genug fuer echte Testdaten. Siehe ADR-0008.
-export const REDEFLUSS_ZIELKORRIDOR = { min: 60, max: 95 }
+// Nachtrag 2026-10-21: Keine Obergrenze. Aufnahmen ohne erkennbare Stille gelten als
+// durchgehend gesprochen und ergeben exakt 100 % - mit max 95 wuerde gerade fluessiges
+// Sprechen als "ausserhalb" markiert (so aufgefallen im Test mit echtem Mikrofon).
+export const REDEFLUSS_ZIELKORRIDOR = { min: 60, max: 100 }
 
 // Herkunft: eigene Einschaetzung, ab welcher Differenz ein Haltungs-Trend ueber die
 // Antwort hinweg als "Veraenderung" statt Mess-Rauschen gilt - nicht empirisch

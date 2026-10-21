@@ -132,6 +132,11 @@ describe('istImZielkorridor', () => {
     expect(istImZielkorridor('bewegungsruhe', 0.01)).toBe(true)
   })
 
+  it('durchgehend flüssiges Sprechen (Redefluss 100 %) liegt im Zielkorridor, es gibt keine Obergrenze', () => {
+    expect(istImZielkorridor('redefluss', 100)).toBe(true)
+    expect(istImZielkorridor('redefluss', 59)).toBe(false)
+  })
+
   it('Haltung 5 Grad liegt im Zielkorridor (0-6 Grad)', () => {
     expect(istImZielkorridor('haltung', 5)).toBe(true)
   })

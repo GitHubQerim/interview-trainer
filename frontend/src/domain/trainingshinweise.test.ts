@@ -58,10 +58,8 @@ describe('leiteTrainingshinweiseAb', () => {
     expect(hinweise[0]?.text).toMatch(/Stichpunkt/)
   })
 
-  it('rät bei fast pausenlosem Sprechen zu bewussten Pausen', () => {
-    const hinweise = leiteTrainingshinweiseAb({ ...IM_ZIELBEREICH, redeflussProzent: 99 })
-
-    expect(hinweise[0]?.text).toMatch(/Pausen/)
+  it('rät bei durchgehend flüssigem Sprechen (100 %) nicht zu Pausen', () => {
+    expect(leiteTrainingshinweiseAb({ ...IM_ZIELBEREICH, redeflussProzent: 100 })).toEqual([])
   })
 
   it('lässt Video-Hinweise weg, wenn die Aufnahme nicht auswertbar war, bewertet aber den Redefluss weiter', () => {

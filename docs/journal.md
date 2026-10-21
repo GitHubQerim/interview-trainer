@@ -177,3 +177,11 @@ Kriterium: [prozess|kritische-reflexion]
 - Nebenbei: NaN-Werte werden vor der Perzentil-Berechnung gefiltert; der Warntext nennt jetzt auch Domainnamen ohne http/www als nicht erkannt. Einen Test, den ich selbst falsch erwartet hatte ("Link"/"Zahl" im Satz sind echte Treffer der Begriffe), habe ich korrigiert, nicht den Code verbogen.
 - Offen/bewusst nicht behoben: Transkripte, die wörtlich "[E-MAIL]" enthalten, werden in der Vorschau als Treffer markiert (kosmetisch); der E-Mail-Regex ist bei extrem langen Strings ohne Leerzeichen quadratisch (praktisch irrelevant bei Transkripten).
 - Anforderung: konkretes Beleg für "Implementierung → Review → gezielte Korrektur" und dafür, dass auch eigene, grüne Tests Annahmen enthalten können (Befund 5 und der falsch erwartete Test).
+
+## 2026-10-21 – Redefluss: Obergrenze des Zielkorridors entfernt (Folge des eigenen Algorithmus-Umbaus)
+Tags: [befund]
+Kriterium: [kritische-reflexion]
+- Befund: auf einem Screenshot der Auswertung wurde ein Redefluss von 100 % als "außerhalb" markiert, mit dem Hinweis "du hast fast ohne Pausen gesprochen". Ursache war meine eigene Änderung vom selben Tag: Aufnahmen ohne erkennbare Stille gelten jetzt als "durchgehend gesprochen" und ergeben per Konstruktion exakt 100 %, der Zielkorridor endete aber bei 95 %. Flüssiges Sprechen wurde so bestraft.
+- Fix, test-first: Zielkorridor 60–100 % (keine Obergrenze), der Hinweis "mehr Pausen machen" entfällt. Unverändert bleibt die Untergrenze und der Hinweis bei zu niedrigem Redefluss.
+- Anforderung: Beispiel dafür, dass eine Korrektur (Algorithmus) eine abgeleitete Annahme (Korridor) kippen kann; gefunden erst durch Hinschauen am echten Ergebnis, nicht durch die Tests.
+

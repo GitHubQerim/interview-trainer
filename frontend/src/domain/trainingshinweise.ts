@@ -66,11 +66,6 @@ export function leiteTrainingshinweiseAb(auswertung: Auswertung): Trainingshinwe
         metrik: 'redefluss',
         text: `Dein Redefluss lag bei ${Math.round(redefluss)} %.${pause} Überleg dir vorher zwei bis drei Stichpunkte, dann stockst du seltener.`,
       })
-    } else if (redefluss > REDEFLUSS_ZIELKORRIDOR.max) {
-      hinweise.push({
-        metrik: 'redefluss',
-        text: `Du hast fast ohne Pausen gesprochen (${Math.round(redefluss)} %). Kurze Pausen nach wichtigen Sätzen helfen den Zuhörenden beim Folgen.`,
-      })
     }
   }
 
