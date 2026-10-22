@@ -185,3 +185,11 @@ Kriterium: [kritische-reflexion]
 - Fix, test-first: Zielkorridor 60–100 % (keine Obergrenze), der Hinweis "mehr Pausen machen" entfällt. Unverändert bleibt die Untergrenze und der Hinweis bei zu niedrigem Redefluss.
 - Anforderung: Beispiel dafür, dass eine Korrektur (Algorithmus) eine abgeleitete Annahme (Korridor) kippen kann; gefunden erst durch Hinschauen am echten Ergebnis, nicht durch die Tests.
 
+## 2026-10-22 – KI-Export im echten Test, danach Oberfläche als Modal umgebaut
+Tags: [befund|entscheidung]
+Kriterium: [prozess|kreativitaet|kritische-reflexion]
+- Test mit einer echten KI: erster Durchlauf ohne gesprochene Antwort (der vorgelesene Fragetext stand im Transkript) – die KI erkannte das korrekt und gab nur Kennzahlen-Feedback. Zweiter Durchlauf mit einer kurzen, frei erfundenen Beispielantwort (STAR-Struktur): die KI erkannte die Struktur, nannte konkrete Verbesserungen (die im Text erwähnten "zwei Zahlen" fehlten), lieferte brauchbare Umformulierungen "statt … lieber …", zitierte die mitgegebenen Kennzahlen (Redefluss 78 %, längste Pause 1,4 s) und merkte an, dass ein Wort im Transkript falsch erkannt wurde. Format, Parser und Anzeige funktionierten ohne Anpassung.
+- Befund: Der Name der erfundenen Beispielperson stand nicht in "Begriffe schwärzen" und war deshalb in der KI-Antwort sichtbar. Das ist keine Panne, sondern die dokumentierte Grenze der Heuristik (Namen werden nicht automatisch erkannt) – und der Grund für die Pflicht-Vorschau mit Bestätigung. Als Beleg in der Präsentation geeignet.
+- Entscheidung des Nutzers nach dem Test: die Oberfläche sollte weniger lang und geführter sein. Das Panel wurde durch ein Modal mit drei Schritten ersetzt (siehe ADR-0011-Nachtrag); die Logik blieb unverändert, die Tests wurden angepasst (280 grün). Visuell mit headless Chrome bei drei Fenstergrößen geprüft.
+- Anforderung: Beleg für "echte Nutzung statt nur Tests" und für iterative Verbesserung der Bedienung nach Nutzerfeedback.
+

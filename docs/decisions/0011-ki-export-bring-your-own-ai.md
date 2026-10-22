@@ -33,3 +33,10 @@ Die Kennzahlen (Kopf, Haltung, Bewegung, Redefluss) sagen nichts über den **Inh
 - Positiv: inhaltliches Feedback ohne Laufzeit-LLM; Datenschutz bleibt Entscheidung der Nutzer:in; keine neue Abhängigkeit, keine Backend-Änderung; alle neuen Module sind reine Funktionen mit Tests.
 - Negativ/Risiken: Heuristik-Anonymisierung ist unvollständig (dokumentiert, in der Oberfläche benannt); die Qualität des Feedbacks hängt von der KI der Nutzer:in ab und wurde nicht validiert; Transkripte der Browser-Erkennung sind lückenhaft (keine Satzzeichen, fehlende Füllwörter); der Rückweg verlangt, dass der Tab offen bleibt.
 - Würde uns zwingen zu revidieren: falls sich zeigt, dass Nutzer:innen die Vorschau nur wegklicken (dann strengere Hilfen oder Export nur ohne Transkript), oder falls Persistenz der Antworten gewünscht wird (dann eigener Nachtrag zu Löschen und Format-Version).
+
+## Nachtrag 2026-10-22 – Oberfläche als Modal mit drei Schritten
+Das zuerst gebaute Panel unter den Kennzahlen stapelte Erklärung, Warnung, Vorschau, Eingabefeld und Antwort in einer langen Seite. Nach dem ersten Test mit einer echten KI (und weil die Ansicht für die Präsentation übersichtlicher sein sollte) ersetzt ein **Modal mit drei Schritten** das Panel: (1) Text vorbereiten, (2) Antwort einfügen, (3) Feedback. Ausgelöst wird es durch einen Button "Mit KI auswerten" in der Button-Reihe der Auswertung.
+- **Inhaltlich unverändert:** Prompt, Schwärzung, Bestätigung vor dem Kopieren, Antwort-Parser und alle Datenschutz-Grenzen aus der Entscheidung oben. Die Warnung zur Schwärzung bleibt sichtbar; nur die allgemeinen Datenschutz-Hinweise stehen eingeklappt unter "Hinweise zum Datenschutz".
+- **Feedback als Akkordeon:** Je Frage eine zugeklappte Zeile mit Kurzinfo ("5 Stärken, 4 Verbesserungen"); darin lassen sich Stärken, Verbesserungen und "Statt … lieber …" einzeln öffnen. Die Antwort bleibt reiner Text.
+- **Technik:** natives `<dialog>` (Fokusfalle, Esc, Hintergrund inklusive), keine neue Abhängigkeit. Der Zustand lebt in der Auswertungs-Komponente und bleibt beim Schließen des Modals erhalten, solange der Tab offen ist; es wird weiterhin nichts gespeichert.
+
