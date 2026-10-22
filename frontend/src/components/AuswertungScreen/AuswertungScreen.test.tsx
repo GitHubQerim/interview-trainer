@@ -110,7 +110,15 @@ describe('AuswertungScreen', () => {
     expect(screen.getByRole('button', { name: 'Frage 2' })).toHaveAttribute('aria-pressed', 'false')
   })
 
-  it('bietet die Auswertung mit eigener KI als eingeklapptes, optionales Panel an', () => {
+  it('bietet die Auswertung mit eigener KI als Button an, der ein Modal öffnet', () => {
+    HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) {
+      this.setAttribute('open', '')
+    }
+    HTMLDialogElement.prototype.close = function close(this: HTMLDialogElement) {
+      this.removeAttribute('open')
+      this.dispatchEvent(new Event('close'))
+    }
+
     render(
       <AuswertungScreen
         ergebnisse={[auswertbareErgebnisse('1', 'Erste Frage')]}
@@ -121,8 +129,10 @@ describe('AuswertungScreen', () => {
       />,
     )
 
-    const panel = screen.getByText(/Mit eigener KI auswerten/).closest('details')
-    expect(panel).not.toHaveAttribute('open')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Mit KI auswerten/ }))
+
+    expect(screen.getByRole('dialog', { name: 'Mit eigener KI auswerten' })).toBeInTheDocument()
     expect(screen.getByTestId('ki-vorschau')).toHaveTextContent('Vertrieb')
   })
 })

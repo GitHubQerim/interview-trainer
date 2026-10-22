@@ -3,7 +3,7 @@ import type { FragenErgebnis } from '../../domain/interview'
 import { ergaenzeRedefluss } from '../../domain/redefluss'
 import { berechneAuswertung } from '../../domain/score'
 import { FrageAuswertung } from '../FrageAuswertung/FrageAuswertung'
-import { KiExportPanel } from '../KiExport/KiExportPanel'
+import { KiAssistent } from '../KiExport/KiAssistent'
 import styles from './AuswertungScreen.module.scss'
 
 interface AuswertungScreenProps {
@@ -65,8 +65,6 @@ export function AuswertungScreen({
 
       <FrageAuswertung frageText={ausgewaehlteFrage.frage.text} auswertung={auswertung} />
 
-      <KiExportPanel ergebnisse={ergebnisse} beruf={beruf} schwierigkeit={schwierigkeit} />
-
       <div className={styles.buttons}>
         <button type="button" className={styles.buttonPrimary} onClick={onNochmalUeben}>
           Nochmal üben
@@ -74,6 +72,7 @@ export function AuswertungScreen({
         <button type="button" className={styles.buttonSecondary} onClick={onVerlaufAnsehen}>
           Verlauf ansehen
         </button>
+        <KiAssistent ergebnisse={ergebnisse} beruf={beruf} schwierigkeit={schwierigkeit} />
       </div>
     </div>
   )
