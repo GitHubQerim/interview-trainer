@@ -1,25 +1,48 @@
 @use '../../styles/tokens' as *;
 
-.wrapper {
+.karte {
   display: flex;
   flex-direction: column;
   gap: $space-2;
-  padding: $space-4 0;
-  border-bottom: 1px solid $color-border;
+  padding: $space-4;
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+}
+
+.karteAusserhalb {
+  border-color: $color-warn;
 }
 
 .kopfzeile {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: flex-start;
+  gap: $space-3;
+  // Feste Mindesthoehe, damit die Balken nebeneinanderliegender Karten auf einer Linie
+  // liegen, auch wenn nur eine Karte einen Untertitel hat.
+  min-height: 3.2rem;
+}
+
+.titel {
+  display: flex;
+  flex-direction: column;
 }
 
 .label {
   color: $color-text;
+  font-weight: 600;
+}
+
+.untertitel {
+  font-size: $font-size-sm;
+  color: $color-text-muted;
 }
 
 .wert {
-  font-size: $font-size-lg;
+  font-size: $font-size-xl;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
 }
 
 .wertImZielkorridor {
@@ -71,7 +94,29 @@
 }
 
 .status {
+  align-self: flex-start;
+  padding: 2px $space-3;
+  border-radius: $radius-pill;
   font-size: $font-size-sm;
+}
+
+.statusOk {
+  background: $color-accent-bg;
+  color: $color-accent;
+
+  &::before {
+    content: '✓ ';
+  }
+}
+
+.statusAchtung {
+  background: #f6e7d8;
+  color: $color-warn;
+
+  &::before {
+    content: '! ';
+    font-weight: 700;
+  }
 }
 
 .details {

@@ -15,3 +15,13 @@ export async function getFragen(beruf: string, schwierigkeit: Schwierigkeit): Pr
 
   return response.json() as Promise<Frage[]>
 }
+
+export async function getBerufe(): Promise<string[]> {
+  const response = await fetch('/api/berufe')
+
+  if (!response.ok) {
+    throw new Error(`Berufe konnten nicht geladen werden (Status ${response.status}).`)
+  }
+
+  return response.json() as Promise<string[]>
+}

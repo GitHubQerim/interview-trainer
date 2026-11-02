@@ -23,6 +23,9 @@ test-results/
 *.db-journal
 prisma/dev.db*
 
+# MediaPipe-Modelle/WASM - per scripts/fetch-models.sh geholt, nicht committed
+frontend/public/models/
+
 # Editor/OS
 .DS_Store
 .vscode/

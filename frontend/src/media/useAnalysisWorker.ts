@@ -5,6 +5,31 @@ import type { InboundMessage, OutboundMessage } from './protocol'
 
 const THROTTLE_MS = 120
 
+/**
+ * Video+Audio kombiniert anfragen; nur bei fehlendem Mikrofon (NotFoundError) auf
+ * reines Video zurueckfallen. Bei verweigerter Berechtigung (NotAllowedError)
+ * blockiert Chrome ueblicherweise Kamera UND Mikrofon gemeinsam - ein zweiter
+ * Versuch waere dann sinnlos und wuerde nur unnoetig einen weiteren Prompt ausloesen.
+ * autoGainControl: false, weil die automatische Verstaerkungsregelung sonst der
+ * eigenen relativen Rauschboden-Normierung in domain/redefluss.ts entgegenarbeiten
+ * wuerde (nicht empirisch validiert, wie die anderen Schwellwerte im Projekt).
+ * Mit mitTon: false (Kameravorschau im Setup) wird das Mikrofon gar nicht erst angefragt.
+ */
+async function holeMedienStream(mitTon: boolean): Promise<MediaStream> {
+  if (!mitTon) {
+    return navigator.mediaDevices.getUserMedia({ video: true })
+  }
+
+  try {
+    return await navigator.mediaDevices.getUserMedia({ video: true, audio: { autoGainControl: false } })
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'NotFoundError') {
+      return navigator.mediaDevices.getUserMedia({ video: true })
+    }
+    throw error
+  }
+}
+
 export interface AnalysisResultPayload {
   timestamp: number
   durationMs: number
@@ -12,9 +37,17 @@ export interface AnalysisResultPayload {
   poseLandmarks: NormalizedLandmark[]
 }
 
-export function useAnalysisWorker(onResult?: (result: AnalysisResultPayload) => void) {
+export interface AnalysisWorkerOptionen {
+  mitTon?: boolean
+}
+
+export function useAnalysisWorker(
+  onResult?: (result: AnalysisResultPayload) => void,
+  { mitTon = true }: AnalysisWorkerOptionen = {},
+) {
   const [status, setStatus] = useState<AnalysisStatus>('idle')
   const [error, setError] = useState<string | null>(null)
+  const [stream, setStream] = useState<MediaStream | null>(null)
 
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const workerRef = useRef<Worker | null>(null)
@@ -39,6 +72,7 @@ export function useAnalysisWorker(onResult?: (result: AnalysisResultPayload) => 
       track.stop()
     }
     streamRef.current = null
+    setStream(null)
   }, [])
 
   useEffect(() => stop, [stop])
@@ -74,7 +108,7 @@ export function useAnalysisWorker(onResult?: (result: AnalysisResultPayload) => 
 
     let stream: MediaStream
     try {
-      stream = await navigator.mediaDevices.getUserMedia({ video: true })
+      stream = await holeMedienStream(mitTon)
     } catch {
       if (myGeneration === generationRef.current) {
         setStatus(nextAnalysisStatus('requesting-permission', { type: 'permission-denied' }))
@@ -93,6 +127,7 @@ export function useAnalysisWorker(onResult?: (result: AnalysisResultPayload) => 
 
     setStatus(nextAnalysisStatus('requesting-permission', { type: 'permission-granted' }))
     streamRef.current = stream
+    setStream(stream)
 
     if (videoRef.current) {
       videoRef.current.srcObject = stream
@@ -143,7 +178,7 @@ export function useAnalysisWorker(onResult?: (result: AnalysisResultPayload) => 
 
     const initMessage: InboundMessage = { type: 'init' }
     worker.postMessage(initMessage)
-  }, [sendFrame, stop])
+  }, [mitTon, sendFrame, stop])
 
   return {
     status,
@@ -151,5 +186,8 @@ export function useAnalysisWorker(onResult?: (result: AnalysisResultPayload) => 
     videoRef,
     start,
     stop,
+    // Fuer useRedeflussVad/useFuellwortErkennung: derselbe Stream, keine zweite
+    // getUserMedia-Stelle.
+    stream,
   }
 }

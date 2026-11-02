@@ -7,7 +7,14 @@ export interface FrameErgebnis {
   poseLandmarks: NormalizedLandmark[]
 }
 
+export interface AudioFrameErgebnis {
+  zeitstempel: number
+  lautstaerke: number
+}
+
 export interface FragenErgebnis {
   frage: Frage
   ergebnisse: FrameErgebnis[]
+  audioErgebnisse: AudioFrameErgebnis[]
+  transkript: string
 }

@@ -26,6 +26,8 @@ function auswertbareErgebnisse(fragenId: string, fragenText: string): FragenErge
       faceLandmarks: ZENTRIERTE_FACE,
       poseLandmarks: AUFRECHTE_POSE,
     })),
+    audioErgebnisse: [],
+    transkript: '',
   }
 }
 
@@ -40,6 +42,8 @@ function luckenhafteErgebnisse(fragenId: string, fragenText: string): FragenErge
         poseLandmarks: [],
       })),
     ],
+    audioErgebnisse: [],
+    transkript: '',
   }
 }
 
@@ -52,7 +56,7 @@ describe('AuswertungScreen', () => {
     expect(screen.getByText('Erste Frage')).toBeInTheDocument()
     expect(screen.getByText('Kopfausrichtung (%)')).toBeInTheDocument()
     expect(screen.getByText('Aufrechte Haltung (°)')).toBeInTheDocument()
-    expect(screen.getByText('Bewegungsruhe')).toBeInTheDocument()
+    expect(screen.getByText('Bewegung')).toBeInTheDocument()
   })
 
   it('wechselt per Tab zur zweiten Frage', () => {
@@ -82,5 +86,53 @@ describe('AuswertungScreen', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Nochmal üben' }))
 
     expect(onNochmalUeben).toHaveBeenCalled()
+  })
+
+  it('weist darauf hin, dass die Zielbereiche Orientierungswerte einer Trainingshilfe sind', () => {
+    render(
+      <AuswertungScreen
+        ergebnisse={[auswertbareErgebnisse('1', 'Erste Frage')]}
+        onNochmalUeben={vi.fn()}
+        onVerlaufAnsehen={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByText(/Die Zielbereiche sind Orientierungswerte/)).toBeInTheDocument()
+    expect(screen.getByText(/Trainingshilfe und keine Bewertung/)).toBeInTheDocument()
+  })
+
+  it('kennzeichnet die gewählte Frage im Tab mit aria-pressed', () => {
+    const ergebnisse = [auswertbareErgebnisse('1', 'Erste Frage'), auswertbareErgebnisse('2', 'Zweite Frage')]
+
+    render(<AuswertungScreen ergebnisse={ergebnisse} onNochmalUeben={vi.fn()} onVerlaufAnsehen={vi.fn()} />)
+
+    expect(screen.getByRole('button', { name: 'Frage 1' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'Frage 2' })).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  it('bietet die Auswertung mit eigener KI als Button an, der ein Modal öffnet', () => {
+    HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) {
+      this.setAttribute('open', '')
+    }
+    HTMLDialogElement.prototype.close = function close(this: HTMLDialogElement) {
+      this.removeAttribute('open')
+      this.dispatchEvent(new Event('close'))
+    }
+
+    render(
+      <AuswertungScreen
+        ergebnisse={[auswertbareErgebnisse('1', 'Erste Frage')]}
+        beruf="Vertrieb"
+        schwierigkeit="mittel"
+        onNochmalUeben={vi.fn()}
+        onVerlaufAnsehen={vi.fn()}
+      />,
+    )
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Mit KI auswerten/ }))
+
+    expect(screen.getByRole('dialog', { name: 'Mit eigener KI auswerten' })).toBeInTheDocument()
+    expect(screen.getByTestId('ki-vorschau')).toHaveTextContent('Vertrieb')
   })
 })

@@ -2,11 +2,13 @@ import { FaceLandmarker, FilesetResolver, PoseLandmarker } from '@mediapipe/task
 import type { FaceLandmarkerResult, PoseLandmarkerResult } from '@mediapipe/tasks-vision'
 import type { InboundMessage, OutboundMessage } from './protocol'
 
-const WASM_BASE_PATH = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/wasm'
-const FACE_MODEL_PATH =
-  'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task'
-const POSE_MODEL_PATH =
-  'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task'
+// Selbst gehostet statt CDN (ADR-0004, umgesetzt in Slice 6): vermeidet, dass bei
+// jedem Start die IP-Adresse der Nutzer:innen an Google geht. Dateien werden per
+// scripts/fetch-models.sh nach frontend/public/models/ geholt (nicht committed,
+// siehe .gitignore) - vor dem ersten Start einmalig ausfuehren.
+const WASM_BASE_PATH = '/models/wasm'
+const FACE_MODEL_PATH = '/models/face_landmarker.task'
+const POSE_MODEL_PATH = '/models/pose_landmarker_lite.task'
 
 let faceLandmarker: FaceLandmarker | undefined
 let poseLandmarker: PoseLandmarker | undefined

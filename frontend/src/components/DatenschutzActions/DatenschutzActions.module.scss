@@ -1,0 +1,17 @@
+@use '../../styles/tokens' as *;
+@use '../../styles/controls' as *;
+
+.wrapper {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+}
+
+.button {
+  @include button-sekundaer;
+}
+
+.fehler {
+  font-size: $font-size-sm;
+  color: $color-warn;
+}

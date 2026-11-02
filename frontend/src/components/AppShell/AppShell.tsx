@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import type { FragenErgebnis } from '../../domain/interview'
 import type { SessionConfig } from '../../domain/session'
+import { speichereSession } from '../../domain/verlaufApi'
 import { AuswertungScreen } from '../AuswertungScreen/AuswertungScreen'
+import { DatenschutzActions } from '../DatenschutzActions/DatenschutzActions'
 import { InterviewScreen } from '../InterviewScreen/InterviewScreen'
 import { SetupScreen } from '../SetupScreen/SetupScreen'
+import { VerlaufScreen } from '../VerlaufScreen/VerlaufScreen'
 import styles from './AppShell.module.scss'
 
 type Tab = 'setup' | 'interview' | 'auswertung' | 'verlauf'
@@ -22,12 +25,21 @@ export function AppShell() {
 
   function handleStart(config: SessionConfig) {
     setSessionConfig(config)
+    // Ergebnisse der vorigen Session verwerfen: sonst gehoeren Beruf/Schwierigkeit der neuen
+    // Session zu den Ergebnissen der alten (z.B. im Prompt des KI-Exports).
+    setErgebnisse(null)
     setActiveTab('interview')
   }
 
   function handleFinished(ergebnisse: FragenErgebnis[]) {
     setErgebnisse(ergebnisse)
     setActiveTab('auswertung')
+
+    if (sessionConfig) {
+      void speichereSession(sessionConfig, ergebnisse).catch((error: unknown) => {
+        console.error('Konnte Auswertung nicht speichern:', error)
+      })
+    }
   }
 
   return (
@@ -46,6 +58,7 @@ export function AppShell() {
             </button>
           ))}
         </nav>
+        {activeTab !== 'interview' && <DatenschutzActions />}
       </header>
 
       <main className={styles.content}>
@@ -56,10 +69,13 @@ export function AppShell() {
         {activeTab === 'auswertung' && ergebnisse && (
           <AuswertungScreen
             ergebnisse={ergebnisse}
+            beruf={sessionConfig?.beruf}
+            schwierigkeit={sessionConfig?.schwierigkeit}
             onNochmalUeben={() => setActiveTab('setup')}
             onVerlaufAnsehen={() => setActiveTab('verlauf')}
           />
         )}
+        {activeTab === 'verlauf' && <VerlaufScreen onZurueck={() => setActiveTab('setup')} />}
       </main>
     </div>
   )

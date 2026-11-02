@@ -1,10 +1,15 @@
 @use '../../styles/tokens' as *;
 
+$content-max-width: 1280px;
+
 .header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  padding: $space-4 $space-6;
+  gap: $space-3 $space-4;
+  // Header buendig zur zentrierten Inhaltsspalte, Rahmenlinie bleibt volle Breite
+  padding: $space-4 max($space-6, calc((100% - #{$content-max-width}) / 2 + #{$space-6}));
   border-bottom: 1px solid $color-border;
 }
 
@@ -34,5 +39,8 @@
 }
 
 .content {
+  width: 100%;
+  max-width: $content-max-width;
+  margin: 0 auto;
   padding: $space-6;
 }
