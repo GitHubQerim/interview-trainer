@@ -193,3 +193,14 @@ Kriterium: [prozess|kreativitaet|kritische-reflexion]
 - Entscheidung des Nutzers nach dem Test: die Oberfläche sollte weniger lang und geführter sein. Das Panel wurde durch ein Modal mit drei Schritten ersetzt (siehe ADR-0011-Nachtrag); die Logik blieb unverändert, die Tests wurden angepasst (280 grün). Visuell mit headless Chrome bei drei Fenstergrößen geprüft.
 - Anforderung: Beleg für "echte Nutzung statt nur Tests" und für iterative Verbesserung der Bedienung nach Nutzerfeedback.
 
+
+## 2026-11-02 – Folienaussage gegen den Code geprüft: `processLocally` fehlte auf der Erkennungs-Instanz
+Tags: [befund]
+Kriterium: [kritische-reflexion|prozess]
+- Anlass: Beim Überarbeiten der Folien (Folie 5 "Video und Ton bleiben auf dem Gerät", Folie 9 Hinweis zur Spracherkennung) wurde geprüft, ob die Aussage vom Code gedeckt ist.
+- Befund: `processLocally: true` stand nur bei `available()` und `install()`, nicht auf der laufenden `SpeechRecognition`-Instanz. Damit war die in ADR-0008 beschriebene On-Device-Garantie nicht gegeben; mit installiertem Sprachpaket hätte die Erkennung trotzdem über den Server laufen können. Meine eigene frühere Formulierung ("echte, verifizierte Garantie") war zu stark: verifiziert war nur, dass die API existiert, nicht, dass die Erkennung lokal arbeitet.
+- Fix, test-first: Property auf der Instanz setzen; ignoriert der Browser sie, startet die Erkennung nicht (fail-closed). Zwei neue Regressionstests, vorher beide rot.
+- Verifikation per Offline-Test in Chrome (WLAN aus, Antwort gesprochen, Transkript und 4,4 Füllwörter pro Minute entstanden). Kein Vergleichslauf mit dem alten Stand; ein einzelner Lauf.
+- Nebenbeobachtung, nicht behoben: In einer Frage lieferte die Erkennung ein Transkript, aber der Redefluss zeigte "keine Daten" (vermutlich Pegelmessung); offen.
+- ADR-0008 um einen Nachtrag korrigiert; die Folienaussage kann bleiben, der Zusatzhinweis zur Spracherkennung auf Folie 9 entfällt.
+- Anforderung: Beleg für "Aussagen in der Präsentation gegen den Code prüfen" und dafür, dass ein Test mit einem Mock eine fehlende Browser-Property nicht findet; fand erst die Gegenprüfung am echten Verhalten.

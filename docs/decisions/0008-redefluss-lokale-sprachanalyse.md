@@ -65,3 +65,16 @@ Bestätigt im selben Test: flüssiges Sprechen 83–88 %, Stocken 58 %, 20 s Sch
 
 **Korrektur zur Transkript-Lebensdauer.** Oben steht, das Transkript verlasse `ergaenzeRedefluss()` nie. Genauer: Es liegt als `FragenErgebnis.transkript` im React-State, solange Interview und Auswertung offen sind, und wird ausschließlich von `ergaenzeRedefluss()` gelesen (aufgerufen aus `AuswertungScreen` und `aggregiereSession`). Es wird nicht persistiert, nicht geloggt und nicht ans Backend gesendet – das Backend hat dafür kein Feld.
 
+
+## Nachtrag 2026-11-02 – `processLocally` fehlte auf der Erkennungs-Instanz; Garantie jetzt wirklich gesetzt
+
+**Fehler.** Oben steht, die optionale Füllwort-Erkennung habe "eine echte (nicht nur behauptete) On-Device-Garantie". Das stimmte nicht. `processLocally: true` wurde nur an `SpeechRecognition.available()` und `install()` übergeben; diese beiden prüfen bzw. laden lediglich das lokale Sprachpaket. Ob die laufende Erkennung lokal arbeitet, entscheidet die Property `processLocally` auf der `SpeechRecognition`-Instanz, deren Default die Server-Erkennung ist. Die Instanz bekam nur `lang` und `continuous`. Mit installiertem Sprachpaket konnte das Mikrofon-Audio also trotzdem an einen Server gehen. Aufgefallen ist das beim Gegenprüfen einer Folienaussage ("Video und Ton bleiben auf dem Gerät") gegen den Code; die Unit-Tests hatten es nicht abgedeckt, weil der Mock die Property nie kannte.
+
+**Fix (test-first, `useFuellwortErkennung.ts`).**
+- `processLocally = true` wird auf jeder Instanz gesetzt, bevor `start()` läuft.
+- Liest der Browser den Wert danach nicht als `true` zurück (Zuweisung ignoriert), startet die Erkennung nicht und der Status wird `unavailable`. Das Feature ist dann aus, statt unbemerkt auf Server-Erkennung zu fallen. Das setzt die feste Entscheidung "nur mit `processLocally`, sonst ist das Feature aus" erst tatsächlich um.
+- Zwei Regressionstests: `processLocally` ist beim `start()`-Aufruf gesetzt; bei ignorierter Property wird nicht gestartet.
+
+**Verifikation.** Manueller Test in Chrome mit ausgeschaltetem WLAN: Eine Antwort wurde offline gesprochen, die App erzeugte ein Transkript und eine Füllwortrate (4,4 pro Minute). Eine Server-Erkennung hätte ohne Netz abgebrochen. Grenzen: ein einzelner Lauf, ein Browser; ein Vergleichslauf mit dem alten Stand wurde nicht gemacht.
+
+**Konsequenz.** Die Aussage "Video und Ton bleiben auf dem Gerät" gilt jetzt auch bei aktiver Füllwort-Erkennung, solange der Browser `processLocally` unterstützt. In allen anderen Browsern ist das Feature aus.
