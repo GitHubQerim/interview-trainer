@@ -26,6 +26,7 @@ interface SpeechRecognitionErgebnisEvent {
 interface SpeechRecognitionInstanz {
   lang: string
   continuous: boolean
+  processLocally: boolean
   onresult: ((event: SpeechRecognitionErgebnisEvent) => void) | null
   onend: (() => void) | null
   onerror: (() => void) | null
@@ -131,6 +132,15 @@ export function useFuellwortErkennung() {
 
     instanz.lang = SPRACHE
     instanz.continuous = true
+    // available()/install() pruefen nur das lokale Sprachpaket. Ob die laufende
+    // Erkennung lokal arbeitet, entscheidet erst diese Property; Default ist die
+    // Server-Erkennung. Ignoriert der Browser die Zuweisung (Property bleibt
+    // false), starten wir nicht - sonst ginge Mikrofon-Audio unbemerkt an einen Server.
+    instanz.processLocally = true
+    if (instanz.processLocally !== true) {
+      setStatus('unavailable')
+      return
+    }
 
     instanz.onresult = (event) => {
       for (let i = event.resultIndex; i < event.results.length; i += 1) {

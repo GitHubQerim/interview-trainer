@@ -5,11 +5,24 @@ import { useFuellwortErkennung } from './useFuellwortErkennung'
 class MockSpeechRecognition {
   lang = ''
   continuous = false
+  processLocallyIgnorieren = false
+  processLocallyBeiStart: boolean | undefined
+  private lokal = false
+  get processLocally() {
+    return this.lokal
+  }
+  set processLocally(wert: boolean) {
+    // Simuliert einen Browser ohne Unterstuetzung: Zuweisung wird verworfen.
+    if (!this.processLocallyIgnorieren) {
+      this.lokal = wert
+    }
+  }
   onresult: ((event: unknown) => void) | null = null
   onend: (() => void) | null = null
   onerror: (() => void) | null = null
   startShouldThrow = false
   start = vi.fn(() => {
+    this.processLocallyBeiStart = this.processLocally
     if (this.startShouldThrow) {
       throw new Error('start fehlgeschlagen')
     }
@@ -26,6 +39,7 @@ function ergebnisEvent(text: string) {
 function stubCtor(
   verfuegbarkeit: 'unavailable' | 'downloadable' | 'downloading' | 'available',
   installImpl?: () => Promise<boolean>,
+  optionen: { processLocallyIgnorieren?: boolean } = {},
 ) {
   const instanzen: MockSpeechRecognition[] = []
   class Ctor {
@@ -33,6 +47,7 @@ function stubCtor(
     static install = vi.fn(installImpl ?? (() => Promise.resolve(true)))
     constructor() {
       const instanz = new MockSpeechRecognition()
+      instanz.processLocallyIgnorieren = optionen.processLocallyIgnorieren ?? false
       instanzen.push(instanz)
       return instanz as unknown as Ctor
     }
@@ -126,6 +141,33 @@ describe('useFuellwortErkennung', () => {
     const { result } = renderHook(() => useFuellwortErkennung())
 
     await waitFor(() => expect(result.current.status).toBe('available'))
+  })
+
+  it('Regressionstest: processLocally ist beim Aufruf von start() gesetzt (sonst Server-Erkennung)', async () => {
+    const { instanzen } = stubCtor('available')
+    const { result } = renderHook(() => useFuellwortErkennung())
+    await waitFor(() => expect(result.current.status).toBe('available'))
+
+    act(() => {
+      result.current.starteFuerFrage()
+    })
+
+    const instanz = instanzen[0]!
+    expect(instanz.start).toHaveBeenCalledTimes(1)
+    expect(instanz.processLocallyBeiStart).toBe(true)
+  })
+
+  it('startet nicht und wird "unavailable", wenn der Browser processLocally ignoriert', async () => {
+    const { instanzen } = stubCtor('available', undefined, { processLocallyIgnorieren: true })
+    const { result } = renderHook(() => useFuellwortErkennung())
+    await waitFor(() => expect(result.current.status).toBe('available'))
+
+    act(() => {
+      result.current.starteFuerFrage()
+    })
+
+    expect(instanzen[0]!.start).not.toHaveBeenCalled()
+    expect(result.current.status).toBe('unavailable')
   })
 
   it('trennt Transkripte zweier Fragen: verspaetetes Ergebnis der alten Instanz landet nicht bei der neuen, aber im eigenen Abschluss', async () => {
